@@ -59,58 +59,71 @@ function Login() {
 
       <main>
         <div
-          class="columns is-centered m-lg"
-          style={{ fontFamily: "Circular" }}
+          class="columns is-centered m-lg font"
         >
-          <div class="column is-4 is-vcentered is-desktop" style={{backgroundColor:'blue'}}>
-            <div class="level-left">
-              <figure class="image is-128x128 level-item">
+          <div class="column is-4 is-vcentered form">
+            <div class="level-left field">
+              <figure class="image is-64x64 level-item">
                 <img src={"../static/sabaiLogo.png"} />
               </figure>
-              <h1 class="level-item" style={{fontSize:'3em'}}>Project Sa'bai</h1>
+              <h1 class="level-item" style={{ fontSize: "2em" }}>
+                Project Sa'bai
+              </h1>
             </div>
             <div className="login">
-              {/* <form onSubmit={handleSubmit}>
-                <label htmlFor="username" class='label'>Username</label>
+              <form onSubmit={handleSubmit}>
+                <div class="field">
+                  <label htmlFor="username" class="label">
+                    Username
+                  </label>
 
-                <input
-                  type="text"
-                  class="input"
-                  id="username"
-                  name="username"
-                  value={userData.username}
-                  onChange={event =>
-                    setUserData(
-                      Object.assign({}, userData, {
-                        username: event.target.value
-                      })
-                    )
-                  }
-                />
+                  <input
+                    type="text"
+                    class="input"
+                    id="username"
+                    name="username"
+                    value={userData.username}
+                    onChange={event =>
+                      setUserData(
+                        Object.assign({}, userData, {
+                          username: event.target.value
+                        })
+                      )
+                    }
+                  />
+                </div>
 
-                <label htmlFor="password" class='label'>Password</label>
+                <div class="field">
+                  <label htmlFor="password" class="label">
+                    Password
+                  </label>
 
-                <input
-                  type="text"
-                  class="input"
-                  id="password"
-                  name="password"
-                  value={userData.username}
-                  onChange={event =>
-                    setUserData(
-                      Object.assign({}, userData, {
-                        username: event.target.value
-                      })
-                    )
-                  }
-                />
+                  <input
+                    type="text"
+                    class="input"
+                    id="password"
+                    name="password"
+                    value={userData.username}
+                    onChange={event =>
+                      setUserData(
+                        Object.assign({}, userData, {
+                          username: event.target.value
+                        })
+                      )
+                    }
+                  />
+                </div>
 
-                <button class='button buttonStyle' type="submit">Login</button>
+                <div class="field">
+                  <button class="button buttonStyle" type="submit">
+                    Login
+                  </button>
+                </div>
 
                 {userData.error && (
                   <p className="error">Error: {userData.error}</p>
                 )}
-              </form> */}
+              </form>
             </div>
           </div>
         </div>

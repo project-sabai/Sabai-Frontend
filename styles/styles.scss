@@ -1,6 +1,12 @@
 $mainColor: #FED11B;
+$complementColor: #180424;
+
 $menu-item-color: white;
 $menu-item-active-background-color: hsl(0, 0%, 96%);
+
+$button-background-color: $complementColor;
+$button-color: white;
+
 
 .font{
     font-family: 'Circular';
@@ -34,8 +40,9 @@ $menu-item-active-background-color: hsl(0, 0%, 96%);
     margin-left: 10px;
     flex-direction: row;
   }
-// .example {
-//   background-color: $mainColor;
-// }
+
+.form{
+    margin-top:100px;
+}
 
 @import "../node_modules/bulma/bulma.sass"
