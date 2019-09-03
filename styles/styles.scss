@@ -29,6 +29,11 @@ $menu-item-active-background-color: hsl(0, 0%, 96%);
     color: red
 }
 
+.container {
+    max-width: 65rem;
+    margin-left: 10px;
+    flex-direction: row;
+  }
 // .example {
 //   background-color: $mainColor;
 // }

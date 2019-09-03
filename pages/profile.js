@@ -77,6 +77,8 @@ Profile.getInitialProps = async ctx => {
   return details
 }
 
+export default Profile
+
 console.log('look here idiot ', Profile.getInitialProps)
 
-export default withAuthSync(Profile)
+// export default withAuthSync(Profile)
