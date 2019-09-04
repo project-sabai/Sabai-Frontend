@@ -1,29 +1,14 @@
 import React from "react";
+import Modal from 'react-modal';
+import styles from "../styles/styles.scss";
 
-const Home = () => (
-  <div>
-    <h1>Cookie-based authentication example</h1>
-    <h2>hello there</h2>
-
-    <p>Steps to test the functionality:</p>
-
-    <ol>
-      <li>Click login and enter your GitHub username.</li>
-      <li>
-        Click home and click profile again, notice how your session is being
-        used through a token stored in a cookie.
-      </li>
-      <li>
-        Click logout and try to go to profile again. You'll get redirected to
-        the `/login` route.
-      </li>
-    </ol>
-    <style jsx>{`
-      li {
-        margin-bottom: 0.5rem;
-      }
-    `}</style>
-  </div>
-);
-
-export default Home;
+export default class Index extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>New Patient Form Task</h1>
+        <h2>Have Fun!</h2>
+      </div>
+    );
+  }
+}
