@@ -61,6 +61,7 @@ export default class Layout extends React.Component {
             docked={this.state.sidebarDocked}
             onSetOpen={this.onSetSidebarOpen}
             styles={{ sidebar: { background: "#180424" } }}
+            transitions={false}
           >
             <div class="container">{this.props.children}</div>
           </Sidebar>

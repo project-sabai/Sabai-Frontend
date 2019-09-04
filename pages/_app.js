@@ -1,5 +1,7 @@
-import React from 'react'
-import App from 'next/app'
+import React from "react";
+import App from "next/app";
+import Layout from "../components/layout";
+import cookie from "js-cookie";
 
 /**
  * Future implementation
@@ -20,9 +22,17 @@ class MyApp extends App {
   // }
 
   render() {
-    const { Component, pageProps } = this.props
-    return <Component {...pageProps} />
+    const { Component, pageProps } = this.props;
+    let isLoggedIn = typeof cookie.get("token") !== "undefined";
+
+    if (!isLoggedIn) return <Component {...pageProps} />;
+
+    return (
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
+    );
   }
 }
 
-export default MyApp
+export default MyApp;

@@ -6,7 +6,7 @@ import getHost from '../utils/get-host'
 
 function login ({ token }) {
   cookie.set('token', token, { expires: 1 })
-  Router.push('/profile')
+  Router.push('/patients')
 }
 
 function logout () {
@@ -84,7 +84,7 @@ function auth (ctx) {
 
 async function logInCheck(ctx) {
   const { token } = nextCookie(ctx);
-  const apiUrl = getHost(ctx.req) + "/api/profile";
+  const apiUrl = 'http://localhost:8000/api/token/verify/'
 
   const redirectOnError = () =>
     typeof window !== "undefined"
@@ -92,11 +92,12 @@ async function logInCheck(ctx) {
       : ctx.res.writeHead(302, { Location: "/login" }).end();
 
   try {
+    
     const response = await fetch(apiUrl, {
-      credentials: "include",
-      headers: {
-        Authorization: JSON.stringify({ token })
-      }
+      method: "POST",
+
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
     })
 
     if (response.ok) {

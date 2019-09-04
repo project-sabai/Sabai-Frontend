@@ -16,33 +16,47 @@ const SideMenu = props => (
     <p class="menu-label sideMenuItem">Services</p>
     <ul class="menu-list">
       <li>
-        <a href='/patients'>Patients</a>
+        <Link href="/patients" replace>
+          <a>Patients</a>
+        </Link>
       </li>
       <li>
-        <a href='triage'>Triage</a>
+        <Link href="/triage" replace>
+          <a>Triage</a>
+        </Link>
       </li>
       <li>
-        <a href='consultation'>Consultation</a>
+        <Link href="/consultation" replace>
+          <a>Consultation</a>
+        </Link>
       </li>
       <li>
-        <a href='pharmacy'>Pharmacy</a>
+        <Link href="/pharmacy" replace>
+          <a>Pharmacy</a>
+        </Link>
       </li>
       <li>
-        <a href='queue'>Queue</a>
+        <Link href="/queue" replace>
+          <a>Queue</a>
+        </Link>
       </li>
     </ul>
     <p class="menu-label sideMenuItem">Analytics</p>
     <ul class="menu-list">
       <li>
-        <a href='analytics/daily'>Daily</a>
+        <Link href="/analytics/daily" replace>
+          <a>Daily</a>
+        </Link>
       </li>
       <li>
-        <a href='analytics/overall'>Overall</a>
+        <Link href="/analytics/overall" replace>
+          <a>Overall</a>
+        </Link>
       </li>
     </ul>
     <p class="menu-label sideMenuItem">Others</p>
     <ul class="menu-list">
-      <li>
+      <li onClick={logout}>
         <a>Logout</a>
       </li>
     </ul>

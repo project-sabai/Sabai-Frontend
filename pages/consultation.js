@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../components/layout";
 import { withAuthSync, logInCheck } from "../utils/auth";
 
 class Consultation extends React.Component {
@@ -10,9 +9,7 @@ class Consultation extends React.Component {
 
   render() {
     return (
-      <Layout>
         <h1>Consultation page under construction</h1>
-      </Layout>
     );
   }
 }

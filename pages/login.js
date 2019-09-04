@@ -13,18 +13,25 @@ function Login() {
     setUserData(Object.assign({}, userData, { error: "" }));
 
     const username = userData.username;
-    const url = "/api/login";
+    const password = userData.password
+    const url = 'http://localhost:8000/api/token/'
 
     try {
+      console.log('fetching data')
       const response = await fetch(url, {
         method: "POST",
 
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username })
+        body: JSON.stringify({ username, password })
       });
+
+      console.log('this is the response ', response)
+
       if (response.status === 200) {
-        const { token } = await response.json();
-        await login({ token });
+        console.log('Login successful')
+        let token = await response.json()
+
+        await login({ token : token.access });
       } else {
         console.log("Login failed.");
         // https://github.com/developit/unfetch#caveats
@@ -99,15 +106,15 @@ function Login() {
                   </label>
 
                   <input
-                    type="text"
+                    type="password"
                     class="input"
                     id="password"
                     name="password"
-                    value={userData.username}
+                    value={userData.password}
                     onChange={event =>
                       setUserData(
                         Object.assign({}, userData, {
-                          username: event.target.value
+                          password: event.target.value
                         })
                       )
                     }
@@ -129,37 +136,6 @@ function Login() {
         </div>
       </main>
     </React.Fragment>
-
-    // <style jsx>{`
-    //   .login {
-    //     max-width: 340px;
-    //     margin: 0 auto;
-    //     padding: 1rem;
-    //     border: 1px solid #ccc;
-    //     border-radius: 4px;
-    //   }
-
-    //   form {
-    //     display: flex;
-    //     flex-flow: column;
-    //   }
-
-    //   label {
-    //     font-weight: 600;
-    //   }
-
-    //   input {
-    //     padding: 8px;
-    //     margin: 0.3rem 0 1rem;
-    //     border: 1px solid #ccc;
-    //     border-radius: 4px;
-    //   }
-
-    //   .error {
-    //     margin: 0.5rem 0 0;
-    //     color: brown;
-    //   }
-    // `}</style>
   );
 }
 

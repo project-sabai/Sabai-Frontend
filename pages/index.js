@@ -1,8 +1,7 @@
-import React from 'react'
-import Layout from '../components/layout'
+import React from "react";
 
 const Home = () => (
-  <Layout>
+  <div>
     <h1>Cookie-based authentication example</h1>
     <h2>hello there</h2>
 
@@ -24,7 +23,7 @@ const Home = () => (
         margin-bottom: 0.5rem;
       }
     `}</style>
-  </Layout>
-)
+  </div>
+);
 
-export default Home
+export default Home;
