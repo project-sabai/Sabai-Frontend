@@ -82,8 +82,20 @@ function auth (ctx) {
   return token
 }
 
+
+/**
+ * 
+ * the problem here and lies here 
+ */
 async function logInCheck(ctx) {
   const { token } = nextCookie(ctx);
+
+  // the problem might be here actually
+  // go check this out
+  // *****
+  // basically, initial token has a very short lifespan
+  // should aim to use a longer-lived one
+  // aim for one day access
   const apiUrl = 'http://localhost:8000/api/token/verify/'
 
   const redirectOnError = () =>

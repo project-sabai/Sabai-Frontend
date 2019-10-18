@@ -1,4 +1,4 @@
-$mainColor: #FED11B;
+$mainColor: #fed11b;
 $complementColor: #180424;
 
 $menu-item-color: white;
@@ -7,42 +7,41 @@ $menu-item-active-background-color: hsl(0, 0%, 96%);
 $button-background-color: $complementColor;
 $button-color: white;
 
-
-.font{
-    font-family: 'Circular';
+.font {
+  font-family: "Circular";
 }
 
-.sideMenu{
-    font-family: 'Circular';
+.sideMenu {
+  font-family: "Circular";
 }
 
 .sideMenuTitle {
-    color: white;
-    font-size: 1.5em;
-  }
+  color: white;
+  font-size: 1.5em;
+}
 
 .sideMenuItem {
-    margin-left: 10px;
-    // margin-top: 10px;
-    // background-color: red
+  margin-left: 10px;
+  // margin-top: 10px;
+  // background-color: red
 }
 
 .sideMenuTop {
-    margin:15px
+  margin: 15px;
 }
 
 .buttonStyle {
-    color: red
+  color: red;
 }
 
 .container {
-    max-width: 65rem;
-    margin-left: 10px;
-    flex-direction: row;
-  }
-
-.form{
-    margin-top:100px;
+  max-width: 65rem;
+  margin-left: 10px;
+  flex-direction: row;
 }
 
-@import "../node_modules/bulma/bulma.sass"
+.form {
+  margin-top: 100px;
+}
+
+@import "../node_modules/bulma/bulma.sass";
