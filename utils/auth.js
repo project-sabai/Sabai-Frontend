@@ -1,91 +1,90 @@
-import { Component } from 'react'
-import Router from 'next/router'
-import nextCookie from 'next-cookies'
-import cookie from 'js-cookie'
-import getHost from '../utils/get-host'
+import { Component } from "react";
+import Router from "next/router";
+import nextCookie from "next-cookies";
+import cookie from "js-cookie";
+import getHost from "../utils/get-host";
 
-function login ({ token }) {
-  cookie.set('token', token, { expires: 1 })
-  Router.push('/patients')
+function login({ token }) {
+  cookie.set("token", token, { expires: 1 });
+  Router.push("/patients");
 }
 
-function logout () {
-  cookie.remove('token')
+function logout() {
+  cookie.remove("token");
   // to support logging out from all windows
-  window.localStorage.setItem('logout', Date.now())
-  Router.push('/login')
+  window.localStorage.setItem("logout", Date.now());
+  Router.push("/login");
 }
 
 // Gets the display name of a JSX component for dev tools
 const getDisplayName = Component =>
-  Component.displayName || Component.name || 'Component'
+  Component.displayName || Component.name || "Component";
 
-function withAuthSync (WrappedComponent) {
+function withAuthSync(WrappedComponent) {
   return class extends Component {
-    static displayName = `withAuthSync(${getDisplayName(WrappedComponent)})`
+    static displayName = `withAuthSync(${getDisplayName(WrappedComponent)})`;
 
-    static async getInitialProps (ctx) {
-      const token = auth(ctx)
+    static async getInitialProps(ctx) {
+      const token = auth(ctx);
 
       const componentProps =
         WrappedComponent.getInitialProps &&
-        (await WrappedComponent.getInitialProps(ctx))
+        (await WrappedComponent.getInitialProps(ctx));
 
-      return { ...componentProps, token }
+      return { ...componentProps, token };
     }
 
-    constructor (props) {
-      super(props)
+    constructor(props) {
+      super(props);
 
-      this.syncLogout = this.syncLogout.bind(this)
+      this.syncLogout = this.syncLogout.bind(this);
     }
 
-    componentDidMount () {
-      window.addEventListener('storage', this.syncLogout)
+    componentDidMount() {
+      window.addEventListener("storage", this.syncLogout);
     }
 
-    componentWillUnmount () {
-      window.removeEventListener('storage', this.syncLogout)
-      window.localStorage.removeItem('logout')
+    componentWillUnmount() {
+      window.removeEventListener("storage", this.syncLogout);
+      window.localStorage.removeItem("logout");
     }
 
-    syncLogout (event) {
-      if (event.key === 'logout') {
-        console.log('logged out from storage!')
-        Router.push('/login')
+    syncLogout(event) {
+      if (event.key === "logout") {
+        console.log("logged out from storage!");
+        Router.push("/login");
       }
     }
 
-    render () {
-      return <WrappedComponent {...this.props} />
+    render() {
+      return <WrappedComponent {...this.props} />;
     }
-  }
+  };
 }
 
-function auth (ctx) {
-  const { token } = nextCookie(ctx)
+function auth(ctx) {
+  const { token } = nextCookie(ctx);
 
   /*
    * If `ctx.req` is available it means we are on the server.
    * Additionally if there's no token it means the user is not logged in.
    */
   if (ctx.req && !token) {
-    ctx.res.writeHead(302, { Location: '/login' })
-    ctx.res.end()
+    ctx.res.writeHead(302, { Location: "/login" });
+    ctx.res.end();
   }
 
   // We already checked for server. This should only happen on client.
   if (!token) {
-    Router.push('/login')
+    Router.push("/login");
   }
 
-  return token
+  return token;
 }
 
-
 /**
- * 
- * the problem here and lies here 
+ *
+ * the problem here and lies here
  */
 async function logInCheck(ctx) {
   const { token } = nextCookie(ctx);
@@ -96,7 +95,7 @@ async function logInCheck(ctx) {
   // basically, initial token has a very short lifespan
   // should aim to use a longer-lived one
   // aim for one day access
-  const apiUrl = 'http://localhost:8000/api/token/verify/'
+  const apiUrl = "http://localhost:8000/api/token/verify/";
 
   const redirectOnError = () =>
     typeof window !== "undefined"
@@ -104,13 +103,12 @@ async function logInCheck(ctx) {
       : ctx.res.writeHead(302, { Location: "/login" }).end();
 
   try {
-    
     const response = await fetch(apiUrl, {
       method: "POST",
 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token })
-    })
+    });
 
     if (response.ok) {
       const js = await response.json();
@@ -118,12 +116,12 @@ async function logInCheck(ctx) {
       return js;
     } else {
       // https://github.com/developit/unfetch#caveats
-      return await redirectOnError()
+      return await redirectOnError();
     }
   } catch (error) {
     // Implementation or Network error
-    return redirectOnError()
+    return redirectOnError();
   }
 }
 
-export { login, logout, withAuthSync, auth, logInCheck }
+export { login, logout, withAuthSync, auth, logInCheck };

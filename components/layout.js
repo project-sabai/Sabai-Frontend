@@ -63,7 +63,7 @@ export default class Layout extends React.Component {
             styles={{ sidebar: { background: "#180424" } }}
             transitions={false}
           >
-            <div class="container">{this.props.children}</div>
+            <div>{this.props.children}</div>
           </Sidebar>
         </main>
       </React.Fragment>

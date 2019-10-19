@@ -4,11 +4,75 @@ import Autosuggest from "react-autosuggest";
 import axios from "axios";
 import styles from "../styles/styles.scss";
 import _ from "lodash";
+import Modal from "react-modal";
+import Webcam from "react-webcam";
 
-// When suggestion is clicked, Autosuggest needs to populate the input
-// based on the clicked suggestion. Teach Autosuggest how to calculate the
-// input value for every given suggestion.
-const getSuggestionValue = suggestion => suggestion.name;
+const customStyles = {
+  content: {
+    // top: "50%",
+    // left: "50%",
+    // right: "auto",
+    // bottom: "auto",
+    // marginRight: "-50%",
+    // transform: "translate(-50%, -50%)"
+    // margin:25,
+    left: "25%",
+    right: "7.5%"
+  }
+};
+
+const videoConstraints = {
+  width: 720,
+  height: 720,
+  facingMode: "user"
+};
+
+const WebcamCapture = () => {
+  // upon taking a photo, save it to state
+  // submit it
+  // provide a button to open the camera again
+  // if done so, clear the state and allow retaking
+
+  const webcamRef = React.useRef(null);
+
+  const capture = React.useCallback(() => {
+    const imageSrc = webcamRef.current.getScreenshot();
+  }, [webcamRef]);
+
+  return (
+    <div
+      style={{
+        height: 250,
+        width: 250,
+        margin: "0 auto",
+      }}
+    >
+      <Webcam
+        audio={false}
+        height={250}
+        ref={webcamRef}
+        screenshotFormat="image/jpeg"
+        width={250}
+        videoConstraints={videoConstraints}
+      />
+
+      <div
+        style={{
+          textAlign: "center"
+        }}
+      >
+        <button
+          class="button is-dark is-medium"
+          onClick={capture}
+        >
+          Capture
+        </button>
+      </div>
+    </div>
+  );
+};
+
+Modal.setAppElement("#__next");
 
 class Patients extends React.Component {
   static async getInitialProps(ctx) {
@@ -28,8 +92,17 @@ class Patients extends React.Component {
       value: "",
       suggestions: [],
       patients: [],
-      patient: {}
+      patient: {},
+      modalIsOpen: false,
+      cameraIsOpen: false,
+      formDetails: {}
     };
+
+    this.openModal = this.openModal.bind(this);
+    // this.afterOpenModal = this.afterOpenModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    this.renderSuggestion = this.renderSuggestion.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
   }
 
   componentDidMount() {
@@ -67,6 +140,19 @@ class Patients extends React.Component {
     return patientsEnriched;
   }
 
+  openModal() {
+    this.setState({ modalIsOpen: true });
+  }
+
+  // afterOpenModal() {
+  //   // references are now sync'd and can be accessed.
+  //   this.subtitle.style.color = "#f00";
+  // }
+
+  closeModal() {
+    this.setState({ modalIsOpen: false });
+  }
+
   getSuggestions(filter) {
     let { patients } = this.state;
     let inputValue = filter.trim().toLowerCase();
@@ -94,8 +180,8 @@ class Patients extends React.Component {
     return (
       <div
         class="card"
-        style={{ width: 500 }}
-        onClick={() => console.log("boo")}
+        style={{ width: 500, margin: 0, padding: 0 }}
+        onClick={() => this.setState({ patient: suggestion })}
       >
         <div class="card-content">
           <div class="media">
@@ -108,8 +194,8 @@ class Patients extends React.Component {
               </figure>
             </div>
             <div class="media-content">
-              <p class="title is-4">{name}</p>
-              <p class="subtitle is-6">{id}</p>
+              <div class="title is-4">{name}</div>
+              <div class="subtitle is-6">{id}</div>
             </div>
           </div>
         </div>
@@ -117,6 +203,9 @@ class Patients extends React.Component {
     );
   }
 
+  // When suggestion is clicked, Autosuggest needs to populate the input
+  // based on the clicked suggestion. Teach Autosuggest how to calculate the
+  // input value for every given suggestion.
   getSuggestionValue(suggestion) {
     return suggestion.fields.name;
   }
@@ -142,32 +231,39 @@ class Patients extends React.Component {
     });
   };
 
-  async loadPatient() {
-    let { value } = this.state;
-    let uri = `http://localhost:8000/patients/get?name=${encodeURIComponent(
-      value
-    )}`;
+  renderPatient() {
+    let { patient } = this.state;
 
-    console.log("working?", value);
-
-    let { data: patient } = await axios.get(uri);
-
-    this.setState({ patient: patient[0] });
-  }
-
-  renderPatient(){
-    let { patient } = this.state
-
-    return(
+    return (
       <div>
         <h1>{patient.fields.name}</h1>
-        <h1>{patient.fields.village_prefix} {patient.pk}</h1>
+        <h1>
+          {patient.fields.village_prefix} {patient.pk}
+        </h1>
       </div>
-    )
+    );
+  }
+
+  handleInputChange(event) {
+    let { formDetails } = this.state;
+
+    const target = event.target;
+    const value = target.type === "checkbox" ? target.checked : target.value;
+    const name = target.name;
+
+    formDetails[name] = value;
+
+    console.log("changes made ", formDetails);
+
+    this.setState({
+      formDetails
+    });
   }
 
   render() {
     const { value, suggestions, patient } = this.state;
+
+    console.log("formdetails ", Object.keys(this.state.formDetails));
 
     console.log("this is our patient ", patient);
 
@@ -183,9 +279,232 @@ class Patients extends React.Component {
 
     // Finally, render it!
     return (
-      <div style={{ padding: 25 }}>
-        <div class="level">
-          <div class="level-left">
+      <div
+        class="columns is-vcentered"
+        style={{
+          margin: 25,
+          position: "relative"
+        }}
+      >
+        <Modal
+          isOpen={this.state.modalIsOpen}
+          // onAfterOpen={this.afterOpenModal}
+          onRequestClose={this.closeModal}
+          style={customStyles}
+          contentLabel="Example Modal"
+        >
+          <div class="columns">
+            <form class="column is-8">
+              <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                  <input
+                    name="name"
+                    class="input"
+                    type="text"
+                    onChange={this.handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Local Name</label>
+                <div class="control">
+                  <input
+                    name="local_name"
+                    class="input"
+                    type="text"
+                    onChange={this.handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Gender</label>
+                <div class="control">
+                  <div class="select">
+                    <select>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field is-grouped">
+                <div class="control is-expanded">
+                  <label class="label">Contact Number</label>
+                  <div class="control">
+                    <input
+                      name="contact_no"
+                      class="input"
+                      type="tel"
+                      onChange={this.handleInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div class="control is-expanded">
+                  <label class="label">Date of Birth</label>
+                  <div class="control">
+                    <input
+                      name="date_of_birth"
+                      class="input"
+                      type="date"
+                      onChange={this.handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="field is-grouped">
+                <div class="control is-expanded">
+                  <label class="label">Village Prefix</label>
+                  <div class="control">
+                    <input
+                      name="village_prefix"
+                      class="input"
+                      type="text"
+                      onChange={this.handleInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div class="control is-expanded">
+                  <label class="label">Travelling Time to Village</label>
+                  <div class="control">
+                    <input
+                      name="travelling_time_to_village"
+                      class="input"
+                      type="number"
+                      onChange={this.handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Drug Allergies</label>
+                <div class="control">
+                  <textarea
+                    name="drug_allergy"
+                    class="textarea"
+                    placeholder="Textarea"
+                    onChange={this.handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <div class="field is-grouped">
+                <div class="control">
+                  <button
+                    class="button is-dark is-medium"
+                    onClick={this.closeModal}
+                  >
+                    Take Photo
+                  </button>
+                </div>
+
+                <div class="control">
+                  <button
+                    class="button is-dark is-medium"
+                    onClick={this.closeModal}
+                  >
+                    Take Photo
+                  </button>
+                </div>
+              </div>
+            </form>
+            <div class="column is-4" >
+              {!this.state.isCameraOpen && (
+                // <div
+                //   class="field is-grouped"
+                //   style={{ postion }}
+                // >
+                // <div class="control">
+                <div
+                  style={{
+                    margin: "0 auto",
+                    height: 250,
+                    width: 250,
+                    backgroundColor: "pink"
+                  }}
+                ></div>
+                // </div>
+                // </div>
+              )}
+
+              {this.state.isCameraOpen && (
+                <div class="control">
+                  <WebcamCapture />
+                </div>
+              )}
+              <div
+                style={{
+                  textAlign: "center"
+                }}
+              >
+                <button
+                  class="button is-dark is-medium"
+                  onClick={() =>
+                    this.setState({ isCameraOpen: !this.state.isCameraOpen })
+                  }
+                  style={{marginTop: this.state.isCameraOpen ? 60: 15}}
+                >
+                  {this.state.isCameraOpen ? 'Cancel' : 'Take Photo'}
+                </button>
+              </div>
+
+              {/* <div class="control"></div> */}
+            </div>
+          </div>
+        </Modal>
+
+        <h1 style={{ color: "black", fontSize: "1.5em", marginLeft: 15 }}>
+          Registration
+        </h1>
+
+        <div
+          class="column is-12"
+          style={{
+            position: "absolute",
+            top: 25
+          }}
+        >
+          <div class="levels" style={{ marginBottom: 10 }}>
+            <div
+              class="level-left"
+              // style={{
+              //   backgroundColor: "red",
+              //   position: "absolute",
+              //   top: 0,
+              //   right: 0
+              // }}
+            >
+              {/* <Autosuggest
+              suggestions={suggestions}
+              onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+              onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+              getSuggestionValue={this.getSuggestionValue}
+              renderSuggestion={this.renderSuggestion}
+              inputProps={inputProps}
+            /> */}
+              <button
+                class="button is-dark is-medium level-item"
+                style={{ display: "inline-block", verticalAlign: "top" }}
+              >
+                Scan Face
+              </button>
+              <button
+                class="button is-dark is-medium level-item"
+                onClick={this.openModal}
+              >
+                New Patient
+              </button>
+            </div>
+          </div>
+
+          <div>
             <Autosuggest
               suggestions={suggestions}
               onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
@@ -194,18 +513,10 @@ class Patients extends React.Component {
               renderSuggestion={this.renderSuggestion}
               inputProps={inputProps}
             />
-            <button
-              class="button is-dark is-medium level-item"
-              onClick={() => this.loadPatient()}
-            >
-              Load Patient
-            </button>
-            <a class="button is-dark is-medium level-item">Take Photo</a>
-            <a class="button is-dark is-medium level-item">New Patient</a>
           </div>
-        </div>
 
-        {typeof patient.pk !== "undefined" && this.renderPatient()}
+          {typeof patient.pk !== "undefined" && this.renderPatient()}
+        </div>
       </div>
     );
   }
