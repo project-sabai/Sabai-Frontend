@@ -4,6 +4,7 @@ import fetch from "isomorphic-unfetch";
 import Layout from "../components/layout";
 import { login } from "../utils/auth";
 import styles from "../styles/styles.scss";
+import axios from "axios";
 
 function Login() {
   const [userData, setUserData] = useState({ username: "", error: "" });
@@ -15,6 +16,7 @@ function Login() {
     const username = userData.username;
     const password = userData.password
     const url = 'http://localhost:8000/api/token/'
+    const userInfoUrl = `http://localhost:8000/user/get?username=${username}`
 
     try {
       console.log('fetching data')
@@ -25,13 +27,19 @@ function Login() {
         body: JSON.stringify({ username, password })
       });
 
+      const { data: userInfo } = await axios.get(userInfoUrl)
+      console.log('url check ', userInfoUrl)
+
       console.log('this is the response ', response)
 
       if (response.status === 200) {
         console.log('Login successful')
         let token = await response.json()
+        let fullUserName = `${userInfo[0].fields.first_name} ${userInfo[0].fields.last_name}`
 
-        await login({ token : token.access });
+        console.log('and your name is ', fullUserName)
+
+        await login({ token : token.access, name: fullUserName });
       } else {
         console.log("Login failed.");
         // https://github.com/developit/unfetch#caveats

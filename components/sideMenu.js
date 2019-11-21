@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logout } from "../utils/auth";
+import cookie from "js-cookie";
 import styles from "../styles/styles.scss";
 
 const SideMenu = props => (
@@ -10,29 +11,15 @@ const SideMenu = props => (
           <img src={"../static/sabaiLogo.png"} />
         </figure>
 
-        <h1 class="level-item sideMenuTitle">Project Sa'bai</h1>
+        <h1 class="level-item sideMenuTitle">Biometrics</h1>
       </div>
     </div>
+    <p class="menu-label sideMenuItem">{cookie.get('name')}</p>
     <p class="menu-label sideMenuItem">Services</p>
     <ul class="menu-list">
       <li>
         <Link href="/patients" replace>
-          <a>Patients</a>
-        </Link>
-      </li>
-      <li>
-        <Link href="/triage" replace>
-          <a>Triage</a>
-        </Link>
-      </li>
-      <li>
-        <Link href="/consultation" replace>
-          <a>Consultation</a>
-        </Link>
-      </li>
-      <li>
-        <Link href="/pharmacy" replace>
-          <a>Pharmacy</a>
+          <a>Registration</a>
         </Link>
       </li>
       <li>
@@ -41,16 +28,16 @@ const SideMenu = props => (
         </Link>
       </li>
     </ul>
-    <p class="menu-label sideMenuItem">Analytics</p>
+    <p class="menu-label sideMenuItem">Pharmacy</p>
     <ul class="menu-list">
       <li>
-        <Link href="/analytics/daily" replace>
-          <a>Daily</a>
+        <Link href="/pharmacy/orders" replace>
+          <a>Orders</a>
         </Link>
       </li>
       <li>
-        <Link href="/analytics/overall" replace>
-          <a>Overall</a>
+        <Link href="/pharmacy/stock" replace>
+          <a>Stock</a>
         </Link>
       </li>
     </ul>

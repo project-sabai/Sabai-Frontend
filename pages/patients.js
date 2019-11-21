@@ -6,78 +6,21 @@ import styles from "../styles/styles.scss";
 import _ from "lodash";
 import Modal from "react-modal";
 import Webcam from "react-webcam";
+import moment from "moment";
+import {API_URL} from '../utils/constants'
 
-const customStyles = {
-  content: {
-    // top: "50%",
-    // left: "50%",
-    // right: "auto",
-    // bottom: "auto",
-    // marginRight: "-50%",
-    // transform: "translate(-50%, -50%)"
-    // margin:25,
-    left: "25%",
-    right: "7.5%"
-  }
-};
-
-const videoConstraints = {
-  width: 720,
-  height: 720,
-  facingMode: "user"
-};
-
-const WebcamCapture = () => {
-  // upon taking a photo, save it to state
-  // submit it
-  // provide a button to open the camera again
-  // if done so, clear the state and allow retaking
-
-  const webcamRef = React.useRef(null);
-
-  const capture = React.useCallback(() => {
-    const imageSrc = webcamRef.current.getScreenshot();
-  }, [webcamRef]);
-
-  return (
-    <div
-      style={{
-        height: 250,
-        width: 250,
-        margin: "0 auto",
-      }}
-    >
-      <Webcam
-        audio={false}
-        height={250}
-        ref={webcamRef}
-        screenshotFormat="image/jpeg"
-        width={250}
-        videoConstraints={videoConstraints}
-      />
-
-      <div
-        style={{
-          textAlign: "center"
-        }}
-      >
-        <button
-          class="button is-dark is-medium"
-          onClick={capture}
-        >
-          Capture
-        </button>
-      </div>
-    </div>
-  );
-};
+// put id
 
 Modal.setAppElement("#__next");
 
 class Patients extends React.Component {
   static async getInitialProps(ctx) {
     let authentication = await logInCheck(ctx);
-    return authentication;
+    console.log("what is this ", authentication);
+
+    let { query } = ctx;
+
+    return { query };
   }
 
   constructor() {
@@ -93,16 +36,24 @@ class Patients extends React.Component {
       suggestions: [],
       patients: [],
       patient: {},
+      scanModalIsOpen: false,
       modalIsOpen: false,
       cameraIsOpen: false,
-      formDetails: {}
+      imageDetails: null,
+      formDetails: {
+        gender: "Male"
+      }
     };
 
     this.openModal = this.openModal.bind(this);
-    // this.afterOpenModal = this.afterOpenModal.bind(this);
     this.closeModal = this.closeModal.bind(this);
+    this.openScanModal = this.openScanModal.bind(this);
+    this.closeScanModal = this.closeScanModal.bind(this);
     this.renderSuggestion = this.renderSuggestion.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.webcamSetRef = this.webcamSetRef.bind(this);
+    this.webcamCapture = this.webcamCapture.bind(this);
+    this.submitNewPatient = this.submitNewPatient.bind(this);
   }
 
   componentDidMount() {
@@ -113,7 +64,7 @@ class Patients extends React.Component {
     console.log("loading data now");
 
     let { data: patients } = await axios.get(
-      "http://localhost:8000/patients/get"
+      `${API_URL}/patients/get`
     );
     // console.log('this is the data ', patients)
     let patientsEnriched = this.patientsEnrich(patients);
@@ -121,6 +72,57 @@ class Patients extends React.Component {
     this.setState({ patients: patientsEnriched });
   }
 
+  /**
+   * Webcam functions
+   */
+
+  webcamSetRef(webcam) {
+    this.webcam = webcam;
+  }
+
+  webcamCapture() {
+    const imageSrc = this.webcam.getScreenshot();
+    this.setState({
+      imageDetails: imageSrc,
+      isCameraOpen: false
+    });
+  }
+
+  renderWebcam() {
+    return (
+      <div
+        style={{
+          height: 250,
+          width: 250,
+          margin: "0 auto"
+        }}
+      >
+        <Webcam
+          audio={false}
+          height={250}
+          width={250}
+          ref={this.webcamSetRef}
+          screenshotFormat="image/jpeg"
+          screenshotQuality={1}
+          videoConstraints={videoConstraints}
+        />
+
+        <div
+          style={{
+            textAlign: "center"
+          }}
+        >
+          <button class="button is-dark is-medium" onClick={this.webcamCapture}>
+            Capture
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * General functions
+   */
   // for noww, all we want to do is to add a filter string to this
   // perhaps in the future, we would want to let our backend do this for us
   patientsEnrich(patients) {
@@ -140,18 +142,371 @@ class Patients extends React.Component {
     return patientsEnriched;
   }
 
+  handleInputChange(event) {
+    let { formDetails } = this.state;
+
+    const target = event.target;
+    const value = target.type === "checkbox" ? target.checked : target.value;
+    const name = target.name;
+
+    formDetails[name] = value;
+
+    console.log("changes made ", formDetails);
+
+    this.setState({
+      formDetails
+    });
+  }
+
+  async submitNewPatient() {
+    let { formDetails, imageDetails } = this.state;
+
+    let payload = {
+      ...formDetails,
+      imageDetails
+    };
+
+    let { data: patient } = await axios.post(
+      `${API_URL}/patients/new`,
+      payload
+    );
+
+    console.log("and this is a ", patient[0]);
+
+    this.closeModal();
+    this.setState({
+      patient: patient[0],
+      formDetails: {
+        gender: "Male"
+      },
+      imageDetails: null
+    });
+    alert("New patient registered!");
+  }
+
+  async scanPatient() {
+    let { imageDetails } = this.state;
+    let payload = {
+      imageDetails
+    };
+
+    await axios.post(`${API_URL}/patients/find_by_scan`, payload);
+  }
+
+  async submitNewVisit() {
+    let { patient } = this.state;
+
+    // future helper function
+    // get all active visits
+    // sort them by their statuses
+    // from there, determine where to put this guy
+
+    let payload = {
+      patient: patient.pk,
+      status: "started",
+      // consultations: {
+      //   medical: {
+      //     isNeeded: visitDetails.medical,
+      //     triageDone: false,
+      //     consultDone: false
+      //   },
+      //   dental: {
+      //     isNeeded: visitDetails.dental,
+      //     triageDone: false,
+      //     consultDone: false
+      //   }
+      // },
+      visit_date: moment().format("YYYY-MM-DD")
+    };
+
+    await axios.post(`${API_URL}/visit/new`, payload);
+
+    this.setState({
+      patient: {}
+    });
+    alert("Patient successfully registered!");
+  }
+
+  /**
+   * Modal functions
+   */
+
   openModal() {
     this.setState({ modalIsOpen: true });
   }
 
-  // afterOpenModal() {
-  //   // references are now sync'd and can be accessed.
-  //   this.subtitle.style.color = "#f00";
-  // }
-
   closeModal() {
     this.setState({ modalIsOpen: false });
   }
+
+  openScanModal() {
+    this.setState({ scanModalIsOpen: true });
+    console.log("hey");
+  }
+
+  closeScanModal() {
+    this.setState({ scanModalIsOpen: false });
+  }
+
+  renderScanModal() {
+    return (
+      <Modal
+        isOpen={this.state.scanModalIsOpen}
+        // onAfterOpen={this.afterOpenModal}
+        onRequestClose={this.closeScanModal}
+        style={customStyles}
+        contentLabel="Example Modal"
+      >
+        <div class="column is-4">
+          {!this.state.isCameraOpen && (
+            <div
+              style={{
+                margin: "0 auto",
+                height: 250,
+                width: 250,
+                backgroundColor: "grey"
+              }}
+            >
+              {this.state.imageDetails != null && (
+                <img src={this.state.imageDetails} />
+              )}
+            </div>
+          )}
+
+          {this.state.isCameraOpen && (
+            <div class="control">
+              {/* <WebcamCapture /> */}
+              {this.renderWebcam()}
+            </div>
+          )}
+          <div
+            style={{
+              textAlign: "center"
+            }}
+          >
+            <button
+              class="button is-dark is-medium"
+              onClick={() =>
+                this.setState({ isCameraOpen: !this.state.isCameraOpen })
+              }
+              style={{ marginTop: this.state.isCameraOpen ? 60 : 15 }}
+            >
+              {this.state.isCameraOpen ? "Cancel" : "Take Photo"}
+            </button>
+
+            <button
+              class="button is-dark is-medium"
+              onClick={() => this.scanPatient()}
+              style={{ marginTop: this.state.isCameraOpen ? 100 : 55 }}
+            >
+              Search
+            </button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  renderModal() {
+    const { formDetails } = this.state;
+
+    return (
+      <Modal
+        isOpen={this.state.modalIsOpen}
+        // onAfterOpen={this.afterOpenModal}
+        onRequestClose={this.closeModal}
+        style={customStyles}
+        contentLabel="Example Modal"
+      >
+        <div class="columns">
+          <div class="column is-8">
+            <form>
+              <div class="field">
+                <label class="label">Name</label>
+                <div class="control">
+                  <input
+                    name="name"
+                    class="input"
+                    type="text"
+                    onChange={this.handleInputChange}
+                    value={formDetails.name}
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Local Name</label>
+                <div class="control">
+                  <input
+                    name="local_name"
+                    class="input"
+                    type="text"
+                    onChange={this.handleInputChange}
+                    value={formDetails.local_name}
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Gender</label>
+                <div class="control">
+                  <div class="select">
+                    <select name="gender" onChange={this.handleInputChange}>
+                      <option
+                        selected={formDetails.gender === "Male"}
+                        value="Male"
+                      >
+                        Male
+                      </option>
+                      <option
+                        selected={formDetails.gender === "Female"}
+                        value="Female"
+                      >
+                        Female
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field is-grouped">
+                <div class="control is-expanded">
+                  <label class="label">Contact Number</label>
+                  <div class="control">
+                    <input
+                      name="contact_no"
+                      class="input"
+                      type="tel"
+                      onChange={this.handleInputChange}
+                      value={formDetails.contact_no}
+                    />
+                  </div>
+                </div>
+
+                <div class="control is-expanded">
+                  <label class="label">Date of Birth</label>
+                  <div class="control">
+                    <input
+                      name="date_of_birth"
+                      class="input"
+                      type="date"
+                      onChange={this.handleInputChange}
+                      value={formDetails.date_of_birth}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="field is-grouped">
+                <div class="control is-expanded">
+                  <label class="label">Village Prefix</label>
+                  <div class="control">
+                    <input
+                      name="village_prefix"
+                      class="input"
+                      type="text"
+                      onChange={this.handleInputChange}
+                      value={formDetails.village_prefix}
+                    />
+                  </div>
+                </div>
+
+                <div class="control is-expanded">
+                  <label class="label">Travelling Time to Village</label>
+                  <div class="control">
+                    <input
+                      name="travelling_time_to_village"
+                      class="input"
+                      type="number"
+                      onChange={this.handleInputChange}
+                      value={formDetails.travelling_time_to_village}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Drug Allergies</label>
+                <div class="control">
+                  <textarea
+                    name="drug_allergy"
+                    class="textarea"
+                    placeholder="Textarea"
+                    onChange={this.handleInputChange}
+                    value={formDetails.drug_allergy}
+                  />
+                </div>
+              </div>
+            </form>
+            <div class="levels" style={{ marginTop: 10 }}>
+              <div class="level-left">
+                <div class="level-item">
+                  <button
+                    class="button is-dark is-medium"
+                    onClick={this.submitNewPatient}
+                  >
+                    Submit
+                  </button>
+                </div>
+
+                <div class="level-item">
+                  <button
+                    class="button is-dark is-medium"
+                    onClick={this.closeModal}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="column is-4">
+            {!this.state.isCameraOpen && (
+              <div
+                style={{
+                  margin: "0 auto",
+                  height: 250,
+                  width: 250,
+                  backgroundColor: "grey"
+                }}
+              >
+                {this.state.imageDetails != null && (
+                  <img src={this.state.imageDetails} />
+                )}
+              </div>
+            )}
+
+            {this.state.isCameraOpen && (
+              <div class="control">
+                {/* <WebcamCapture /> */}
+                {this.renderWebcam()}
+              </div>
+            )}
+            <div
+              style={{
+                textAlign: "center"
+              }}
+            >
+              <button
+                class="button is-dark is-medium"
+                onClick={() =>
+                  this.setState({ isCameraOpen: !this.state.isCameraOpen })
+                }
+                style={{ marginTop: this.state.isCameraOpen ? 60 : 15 }}
+              >
+                {this.state.isCameraOpen ? "Cancel" : "Take Photo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  /**
+   * Auto Suggestions functions
+   */
 
   getSuggestions(filter) {
     let { patients } = this.state;
@@ -176,6 +531,7 @@ class Patients extends React.Component {
   renderSuggestion(suggestion) {
     let name = suggestion.fields.name;
     let id = `${suggestion.fields.village_prefix} ${suggestion.pk}`;
+    let imageURL = suggestion.fields.picture;
 
     return (
       <div
@@ -186,10 +542,12 @@ class Patients extends React.Component {
         <div class="card-content">
           <div class="media">
             <div class="media-left">
-              <figure class="image is-48x48">
+              <figure class="image is-96x96">
                 <img
-                  src="https://bulma.io/images/placeholders/96x96.png"
+                  // src="https://bulma.io/images/placeholders/96x96.png"
+                  src={`${API_URL}/media/${imageURL}`}
                   alt="Placeholder image"
+                  style={{ height: 96, width: 96, objectFit: "cover" }}
                 />
               </figure>
             </div>
@@ -244,28 +602,14 @@ class Patients extends React.Component {
     );
   }
 
-  handleInputChange(event) {
-    let { formDetails } = this.state;
-
-    const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value;
-    const name = target.name;
-
-    formDetails[name] = value;
-
-    console.log("changes made ", formDetails);
-
-    this.setState({
-      formDetails
-    });
-  }
-
   render() {
     const { value, suggestions, patient } = this.state;
 
     console.log("formdetails ", Object.keys(this.state.formDetails));
 
     console.log("this is our patient ", patient);
+
+    console.log("this is the props query ", this.props.query);
 
     // Autosuggest will pass through all these props to the input.
     const inputProps = {
@@ -280,246 +624,125 @@ class Patients extends React.Component {
     // Finally, render it!
     return (
       <div
-        class="columns is-vcentered"
         style={{
-          margin: 25,
-          position: "relative"
+          marginTop: 15,
+          marginLeft: 25,
+          marginRight: 25
+          // position: "relative"
         }}
       >
-        <Modal
-          isOpen={this.state.modalIsOpen}
-          // onAfterOpen={this.afterOpenModal}
-          onRequestClose={this.closeModal}
-          style={customStyles}
-          contentLabel="Example Modal"
-        >
-          <div class="columns">
-            <form class="column is-8">
-              <div class="field">
-                <label class="label">Name</label>
-                <div class="control">
-                  <input
-                    name="name"
-                    class="input"
-                    type="text"
-                    onChange={this.handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div class="field">
-                <label class="label">Local Name</label>
-                <div class="control">
-                  <input
-                    name="local_name"
-                    class="input"
-                    type="text"
-                    onChange={this.handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div class="field">
-                <label class="label">Gender</label>
-                <div class="control">
-                  <div class="select">
-                    <select>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="field is-grouped">
-                <div class="control is-expanded">
-                  <label class="label">Contact Number</label>
-                  <div class="control">
-                    <input
-                      name="contact_no"
-                      class="input"
-                      type="tel"
-                      onChange={this.handleInputChange}
-                    />
-                  </div>
-                </div>
-
-                <div class="control is-expanded">
-                  <label class="label">Date of Birth</label>
-                  <div class="control">
-                    <input
-                      name="date_of_birth"
-                      class="input"
-                      type="date"
-                      onChange={this.handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div class="field is-grouped">
-                <div class="control is-expanded">
-                  <label class="label">Village Prefix</label>
-                  <div class="control">
-                    <input
-                      name="village_prefix"
-                      class="input"
-                      type="text"
-                      onChange={this.handleInputChange}
-                    />
-                  </div>
-                </div>
-
-                <div class="control is-expanded">
-                  <label class="label">Travelling Time to Village</label>
-                  <div class="control">
-                    <input
-                      name="travelling_time_to_village"
-                      class="input"
-                      type="number"
-                      onChange={this.handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div class="field">
-                <label class="label">Drug Allergies</label>
-                <div class="control">
-                  <textarea
-                    name="drug_allergy"
-                    class="textarea"
-                    placeholder="Textarea"
-                    onChange={this.handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div class="field is-grouped">
-                <div class="control">
-                  <button
-                    class="button is-dark is-medium"
-                    onClick={this.closeModal}
-                  >
-                    Take Photo
-                  </button>
-                </div>
-
-                <div class="control">
-                  <button
-                    class="button is-dark is-medium"
-                    onClick={this.closeModal}
-                  >
-                    Take Photo
-                  </button>
-                </div>
-              </div>
-            </form>
-            <div class="column is-4" >
-              {!this.state.isCameraOpen && (
-                // <div
-                //   class="field is-grouped"
-                //   style={{ postion }}
-                // >
-                // <div class="control">
-                <div
-                  style={{
-                    margin: "0 auto",
-                    height: 250,
-                    width: 250,
-                    backgroundColor: "pink"
-                  }}
-                ></div>
-                // </div>
-                // </div>
-              )}
-
-              {this.state.isCameraOpen && (
-                <div class="control">
-                  <WebcamCapture />
-                </div>
-              )}
-              <div
-                style={{
-                  textAlign: "center"
-                }}
-              >
+        {this.renderModal()}
+        {this.renderScanModal()}
+        <div class="column is-12">
+          <h1 style={{ color: "black", fontSize: "1.5em" }}>Registration</h1>
+        </div>
+        <div class="columns is-vcentered">
+          <div
+            class="column is-12"
+            style={
+              {
+                // position: "absolute",
+                // top: 25,
+                // backgroundColor: "brown"
+              }
+            }
+          >
+            <div class="levels" style={{ marginBottom: 10 }}>
+              <div class="level-left">
                 <button
-                  class="button is-dark is-medium"
-                  onClick={() =>
-                    this.setState({ isCameraOpen: !this.state.isCameraOpen })
-                  }
-                  style={{marginTop: this.state.isCameraOpen ? 60: 15}}
+                  class="button is-dark is-medium level-item"
+                  style={{ display: "inline-block", verticalAlign: "top" }}
+                  onClick={this.openScanModal}
                 >
-                  {this.state.isCameraOpen ? 'Cancel' : 'Take Photo'}
+                  Scan Face
+                </button>
+                <button
+                  class="button is-dark is-medium level-item"
+                  onClick={this.openModal}
+                >
+                  New Patient
                 </button>
               </div>
+            </div>
 
-              {/* <div class="control"></div> */}
+            <div>
+              <Autosuggest
+                suggestions={suggestions}
+                onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+                onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+                getSuggestionValue={this.getSuggestionValue}
+                renderSuggestion={this.renderSuggestion}
+                inputProps={inputProps}
+              />
             </div>
           </div>
-        </Modal>
-
-        <h1 style={{ color: "black", fontSize: "1.5em", marginLeft: 15 }}>
-          Registration
-        </h1>
-
-        <div
-          class="column is-12"
-          style={{
-            position: "absolute",
-            top: 25
-          }}
-        >
-          <div class="levels" style={{ marginBottom: 10 }}>
-            <div
-              class="level-left"
-              // style={{
-              //   backgroundColor: "red",
-              //   position: "absolute",
-              //   top: 0,
-              //   right: 0
-              // }}
-            >
-              {/* <Autosuggest
-              suggestions={suggestions}
-              onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-              onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-              getSuggestionValue={this.getSuggestionValue}
-              renderSuggestion={this.renderSuggestion}
-              inputProps={inputProps}
-            /> */}
-              <button
-                class="button is-dark is-medium level-item"
-                style={{ display: "inline-block", verticalAlign: "top" }}
-              >
-                Scan Face
-              </button>
-              <button
-                class="button is-dark is-medium level-item"
-                onClick={this.openModal}
-              >
-                New Patient
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <Autosuggest
-              suggestions={suggestions}
-              onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-              onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-              getSuggestionValue={this.getSuggestionValue}
-              renderSuggestion={this.renderSuggestion}
-              inputProps={inputProps}
-            />
-          </div>
-
-          {typeof patient.pk !== "undefined" && this.renderPatient()}
         </div>
+        {typeof patient.pk !== "undefined" && (
+          <div class="columns">
+            <div class="column is-2">
+              <figure class="image is-1by1">
+                <img
+                  src={`${API_URL}/media/${patient.fields.picture}`}
+                  alt="Placeholder image"
+                  class="has-ratio"
+                  style={{ height: 200, width: 200, objectFit: "cover" }}
+                />
+              </figure>
+            </div>
+            <div class="column is-5">
+              <label class="label">Name</label>
+              <article class="message">
+                <div class="message-body">{patient.fields.name}</div>
+              </article>
+              <label class="label">Gender</label>
+              <article class="message">
+                <div class="message-body">{patient.fields.gender}</div>
+              </article>
+              <label class="label">Date of Birth</label>
+              <article class="message">
+                <div class="message-body">{patient.fields.date_of_birth}</div>
+              </article>
+              <label class="label">Travelling Time to Village</label>
+              <article class="message">
+                <div class="message-body">
+                  {patient.fields.travelling_time_to_village}
+                </div>
+              </article>
+              <label class="label">Drug Allergies</label>
+              <article class="message">
+                <div class="message-body">{patient.fields.drug_allergy}</div>
+              </article>
+            </div>
+            <div
+              class="column is-5"
+              // style={{ backgroundColor: "yellow" }}
+            >
+              <label class="label">Register Patient</label>
+              <button
+                class="button is-dark is-medium level-item"
+                onClick={() => this.submitNewVisit()}
+              >
+                Register
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 }
+
+const customStyles = {
+  content: {
+    left: "25%",
+    right: "7.5%"
+  }
+};
+
+const videoConstraints = {
+  width: 720,
+  height: 720,
+  facingMode: "user"
+};
 
 export default withAuthSync(Patients);

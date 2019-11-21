@@ -4,8 +4,9 @@ import nextCookie from "next-cookies";
 import cookie from "js-cookie";
 import getHost from "../utils/get-host";
 
-function login({ token }) {
+function login({ token, name }) {
   cookie.set("token", token, { expires: 1 });
+  cookie.set("name", name)
   Router.push("/patients");
 }
 
@@ -26,6 +27,8 @@ function withAuthSync(WrappedComponent) {
 
     static async getInitialProps(ctx) {
       const token = auth(ctx);
+
+      console.log('authy authy authy ', token)
 
       const componentProps =
         WrappedComponent.getInitialProps &&
@@ -98,9 +101,12 @@ async function logInCheck(ctx) {
   const apiUrl = "http://localhost:8000/api/token/verify/";
 
   const redirectOnError = () =>
-    typeof window !== "undefined"
+    {typeof window !== "undefined"
       ? Router.push("/login")
       : ctx.res.writeHead(302, { Location: "/login" }).end();
+    cookie.remove('token')
+    cookie.remove('name')
+    }
 
   try {
     const response = await fetch(apiUrl, {
@@ -109,6 +115,8 @@ async function logInCheck(ctx) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token })
     });
+
+    console.log('this was the response ', response)
 
     if (response.ok) {
       const js = await response.json();

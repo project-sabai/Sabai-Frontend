@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { logout } from "../utils/auth";
-import styles from '../styles/styles.scss'
+import styles from "../styles/styles.scss";
 
 const Header = props => (
   // <header class=".example">
-    <nav class='navbar is-dark'>
-
-    <div class='navbar-brand'>
+  <nav class="navbar is-dark">
+    <div class="navbar-brand">
       <div>
-      <h1>Project Sa'bai</h1>
+        <h1>Project Sa'bai</h1>
       </div>
       <nav>
         <ul>
@@ -66,7 +65,7 @@ const Header = props => (
         
       }
     `}</style> */}
-  {/* // </header> */}
+    {/* // </header> */}
   </nav>
 );
 
