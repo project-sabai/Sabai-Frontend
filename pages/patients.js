@@ -7,7 +7,7 @@ import _ from "lodash";
 import Modal from "react-modal";
 import Webcam from "react-webcam";
 import moment from "moment";
-import {API_URL} from '../utils/constants'
+import { API_URL } from "../utils/constants";
 
 // put id
 
@@ -42,7 +42,11 @@ class Patients extends React.Component {
       imageDetails: null,
       formDetails: {
         gender: "Male"
-      }
+      },
+      scanOptions: {
+        gender: "Male"
+      },
+      possibleOptions: []
     };
 
     this.openModal = this.openModal.bind(this);
@@ -54,6 +58,7 @@ class Patients extends React.Component {
     this.webcamSetRef = this.webcamSetRef.bind(this);
     this.webcamCapture = this.webcamCapture.bind(this);
     this.submitNewPatient = this.submitNewPatient.bind(this);
+    this.handleScanOptionsChange = this.handleScanOptionsChange.bind(this);
   }
 
   componentDidMount() {
@@ -63,9 +68,7 @@ class Patients extends React.Component {
   async onRefresh() {
     console.log("loading data now");
 
-    let { data: patients } = await axios.get(
-      `${API_URL}/patients/get`
-    );
+    let { data: patients } = await axios.get(`${API_URL}/patients/get`);
     // console.log('this is the data ', patients)
     let patientsEnriched = this.patientsEnrich(patients);
 
@@ -132,10 +135,11 @@ class Patients extends React.Component {
       let contact_no = patient_details.contact_no;
       let village = patient_details.village_prefix;
       let id = patient.pk;
+      let localName = patient_details.local_name;
 
       return {
         ...patient,
-        filterString: `${village}${id} ${name} ${contact_no}`
+        filterString: `${village}${id} ${name} ${contact_no} ${localName}`
       };
     });
 
@@ -158,39 +162,90 @@ class Patients extends React.Component {
     });
   }
 
+  handleScanOptionsChange(event) {
+    let { scanOptions } = this.state;
+
+    const target = event.target;
+    const value = target.type === "checkbox" ? target.checked : target.value;
+    const name = target.name;
+
+    scanOptions[name] = value;
+
+    this.setState({
+      scanOptions
+    });
+  }
+
   async submitNewPatient() {
     let { formDetails, imageDetails } = this.state;
 
-    let payload = {
-      ...formDetails,
-      imageDetails
-    };
+    let checklist = [
+      "name",
+      "local_name",
+      "gender",
+      "contact_no",
+      "travelling_time_to_village",
+      "date_of_birth",
+      "drug_allergy",
+      "village_prefix"
+    ];
 
-    let { data: patient } = await axios.post(
-      `${API_URL}/patients/new`,
-      payload
-    );
-
-    console.log("and this is a ", patient[0]);
-
-    this.closeModal();
-    this.setState({
-      patient: patient[0],
-      formDetails: {
-        gender: "Male"
-      },
-      imageDetails: null
+    let errorCount = 0;
+    checklist.forEach(item => {
+      if (typeof formDetails[item] == "undefined") {
+        errorCount += 1;
+      }
     });
-    alert("New patient registered!");
+
+    if (errorCount > 0) {
+      alert("Please complete the form before submitting!");
+    } else if (imageDetails == null) {
+      alert("Please take a photo before submitting!");
+    } else {
+      let payload = {
+        ...formDetails,
+        imageDetails
+      };
+
+      let { data: response } = await axios.post(
+        `${API_URL}/patients/new`,
+        payload
+      );
+
+      if(typeof response.error == 'undefined'){
+        this.setState({
+          patient: response[0],
+          formDetails: {
+            gender: "Male"
+          },
+          imageDetails: null
+        });
+        alert("New patient registered!");
+        this.closeModal();
+      }else{alert("Please retake photo!")}
+
+
+    }
   }
 
   async scanPatient() {
-    let { imageDetails } = this.state;
+    let { scanOptions, imageDetails } = this.state;
     let payload = {
       imageDetails
     };
 
-    await axios.post(`${API_URL}/patients/find_by_scan`, payload);
+    let gender = scanOptions.gender;
+    let scanUrl = `${API_URL}/patients/find_by_scan?`;
+    scanUrl += `gender=${gender}`;
+    if (typeof scanOptions.village_prefix != "undefined") {
+      scanUrl += `&village_prefix=${scanOptions.village_prefix}`;
+    }
+
+    let { data: possibleOptions } = await axios.post(scanUrl, payload);
+    if (possibleOptions.length > 0) alert("Options found!");
+    else alert("No options found!");
+
+    this.setState({ possibleOptions });
   }
 
   async submitNewVisit() {
@@ -204,18 +259,6 @@ class Patients extends React.Component {
     let payload = {
       patient: patient.pk,
       status: "started",
-      // consultations: {
-      //   medical: {
-      //     isNeeded: visitDetails.medical,
-      //     triageDone: false,
-      //     consultDone: false
-      //   },
-      //   dental: {
-      //     isNeeded: visitDetails.dental,
-      //     triageDone: false,
-      //     consultDone: false
-      //   }
-      // },
       visit_date: moment().format("YYYY-MM-DD")
     };
 
@@ -249,6 +292,47 @@ class Patients extends React.Component {
   }
 
   renderScanModal() {
+    let { scanOptions, possibleOptions } = this.state;
+
+    let tableContents = possibleOptions.map(option => {
+      let fields = option.fields;
+      let name = fields.name;
+      let id = `${fields.village_prefix}${option.pk}`;
+      let imageUrl = `${API_URL}/media/${fields.picture}`;
+      let dateOfBirth = moment(fields.date_of_birth).format("DD MMM YYYY");
+
+      let select = (
+        <button
+          class="button is-dark level-item"
+          onClick={() => {
+            this.closeScanModal();
+            this.setState({ patient: option });
+          }}
+        >
+          Select
+        </button>
+      );
+
+      return (
+        <tr>
+          <td>{id}</td>
+          <td>
+            <figure class="image is-96x96">
+              <img
+                // src="https://bulma.io/images/placeholders/96x96.png"
+                src={imageUrl}
+                alt="Placeholder image"
+                style={{ height: 96, width: 96, objectFit: "cover" }}
+              />
+            </figure>
+          </td>
+          <td>{name}</td>
+          <td>{dateOfBirth}</td>
+          <td>{select}</td>
+        </tr>
+      );
+    });
+
     return (
       <Modal
         isOpen={this.state.scanModalIsOpen}
@@ -257,51 +341,120 @@ class Patients extends React.Component {
         style={customStyles}
         contentLabel="Example Modal"
       >
-        <div class="column is-4">
-          {!this.state.isCameraOpen && (
-            <div
-              style={{
-                margin: "0 auto",
-                height: 250,
-                width: 250,
-                backgroundColor: "grey"
-              }}
-            >
-              {this.state.imageDetails != null && (
-                <img src={this.state.imageDetails} />
+        <div>
+          <h1 style={{ color: "black", fontSize: "1.5em", marginBottom: 15 }}>
+            Scan Face
+          </h1>
+          <div class="columns">
+            <div class="column is-4">
+              {!this.state.isCameraOpen && (
+                <div
+                  style={{
+                    margin: "0 auto",
+                    height: 250,
+                    width: 250,
+                    backgroundColor: "grey"
+                  }}
+                >
+                  {this.state.imageDetails != null && (
+                    <img src={this.state.imageDetails} />
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {this.state.isCameraOpen && (
-            <div class="control">
-              {/* <WebcamCapture /> */}
-              {this.renderWebcam()}
+              {this.state.isCameraOpen && (
+                <div class="control">
+                  {/* <WebcamCapture /> */}
+                  {this.renderWebcam()}
+                </div>
+              )}
+              <div
+                style={{
+                  textAlign: "center"
+                }}
+              >
+                <button
+                  class="button is-dark is-medium"
+                  onClick={() =>
+                    this.setState({ isCameraOpen: !this.state.isCameraOpen })
+                  }
+                  style={{ marginTop: this.state.isCameraOpen ? 60 : 15 }}
+                >
+                  {this.state.isCameraOpen ? "Cancel" : "Take Photo"}
+                </button>
+              </div>
             </div>
-          )}
-          <div
-            style={{
-              textAlign: "center"
-            }}
-          >
-            <button
-              class="button is-dark is-medium"
-              onClick={() =>
-                this.setState({ isCameraOpen: !this.state.isCameraOpen })
-              }
-              style={{ marginTop: this.state.isCameraOpen ? 60 : 15 }}
-            >
-              {this.state.isCameraOpen ? "Cancel" : "Take Photo"}
-            </button>
+            <div class="column is-4">
+              <div class="field">
+                <label class="label">Gender</label>
+                <div class="control">
+                  <div class="select" style={{ margin: "0 auto" }}>
+                    <select
+                      name="gender"
+                      onChange={this.handleScanOptionsChange}
+                    >
+                      <option
+                        selected={scanOptions.gender === "Male"}
+                        value="Male"
+                      >
+                        Male
+                      </option>
+                      <option
+                        selected={scanOptions.gender === "Female"}
+                        value="Female"
+                      >
+                        Female
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
 
-            <button
-              class="button is-dark is-medium"
-              onClick={() => this.scanPatient()}
-              style={{ marginTop: this.state.isCameraOpen ? 100 : 55 }}
-            >
-              Search
-            </button>
+              <div class="field">
+                <label class="label">Village Prefix</label>
+                <div class="control">
+                  <input
+                    name="village_prefix"
+                    class="input"
+                    type="text"
+                    onChange={this.handleScanOptionsChange}
+                    value={scanOptions.village_prefix}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <button
+                  class="button is-dark is-medium"
+                  onClick={() => this.scanPatient()}
+                  style={{ marginTop: 10 }}
+                >
+                  Search
+                </button>
+              </div>
+            </div>
           </div>
+          <hr />
+
+          <label class="label">Results</label>
+          {possibleOptions.length > 0 ? (
+            <div>
+              <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Photo</th>
+                    <th>Full Name</th>
+                    <th>Date of Birth </th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>{tableContents}</tbody>
+              </table>
+            </div>
+          ) : (
+            <h2>No matches found!</h2>
+          )}
         </div>
       </Modal>
     );
@@ -690,9 +843,17 @@ class Patients extends React.Component {
               </figure>
             </div>
             <div class="column is-5">
+              <label class="label">ID</label>
+              <article class="message">
+                <div class="message-body">{`${patient.fields.village_prefix}${patient.pk}`}</div>
+              </article>
               <label class="label">Name</label>
               <article class="message">
                 <div class="message-body">{patient.fields.name}</div>
+              </article>
+              <label class="label">Local Name</label>
+              <article class="message">
+                <div class="message-body">{patient.fields.local_name}</div>
               </article>
               <label class="label">Gender</label>
               <article class="message">
@@ -717,12 +878,12 @@ class Patients extends React.Component {
               class="column is-5"
               // style={{ backgroundColor: "yellow" }}
             >
-              <label class="label">Register Patient</label>
+              <label class="label">Start a Visit</label>
               <button
                 class="button is-dark is-medium level-item"
                 onClick={() => this.submitNewVisit()}
               >
-                Register
+                Start
               </button>
             </div>
           </div>

@@ -301,30 +301,34 @@ class MedicalTriageView extends React.Component {
           </div>
         </div>
 
-        <hr/>
+        <hr />
 
         <div class="field">
           <label class="label">HIV Positive</label>
           <article class="message">
-            <div class="message-body">{content.fields.hiv_positive ? 'Positive':'Negative'}</div>
+            <div class="message-body">
+              {content.fields.hiv_positive ? "Positive" : "Negative"}
+            </div>
           </article>
         </div>
 
         <div class="field">
           <label class="label">PTB Positive</label>
           <article class="message">
-            <div class="message-body">{content.fields.ptb_positive ? 'Positive':'Negative'}</div>
+            <div class="message-body">
+              {content.fields.ptb_positive ? "Positive" : "Negative"}
+            </div>
           </article>
         </div>
 
         <div class="field">
           <label class="label">HEPC Positive</label>
           <article class="message">
-            <div class="message-body">{content.fields.hepc_positive ? 'Positive':'Negative'}</div>
+            <div class="message-body">
+              {content.fields.hepc_positive ? "Positive" : "Negative"}
+            </div>
           </article>
         </div>
-
-
       </div>
     );
   }
@@ -367,10 +371,61 @@ class VisitPrescriptionsTable extends React.Component {
   }
 }
 
+class PatientView extends React.Component {
+  constructor() {
+    super();
+  }
+
+  render() {
+    let { content } = this.props;
+
+    return (
+      <div class="column is-3">
+        <div class="field">
+          <label class="label">Local Name</label>
+          <article class="message">
+            <div class="message-body">{content.fields.local_name}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">Gender</label>
+          <article class="message">
+            <div class="message-body">{content.fields.gender}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">Date of Birth</label>
+          <article class="message">
+            <div class="message-body">{content.fields.date_of_birth}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">Travelling Time to Village</label>
+          <article class="message">
+            <div class="message-body">{content.fields.travelling_time_to_village}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">Allergies</label>
+          <article class="message">
+            <div class="message-body">{content.fields.drug_allergy}</div>
+          </article>
+        </div>
+
+      </div>
+    );
+  }
+}
+
 export {
   ConsultationsTable,
   ConsultationsView,
   DentalTriageView,
   MedicalTriageView,
-  VisitPrescriptionsTable
+  VisitPrescriptionsTable,
+  PatientView
 };

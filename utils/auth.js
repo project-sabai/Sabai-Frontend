@@ -3,10 +3,11 @@ import Router from "next/router";
 import nextCookie from "next-cookies";
 import cookie from "js-cookie";
 import getHost from "../utils/get-host";
+import { API_URL } from "../utils/constants";
 
 function login({ token, name }) {
   cookie.set("token", token, { expires: 1 });
-  cookie.set("name", name)
+  cookie.set("name", name);
   Router.push("/patients");
 }
 
@@ -27,8 +28,6 @@ function withAuthSync(WrappedComponent) {
 
     static async getInitialProps(ctx) {
       const token = auth(ctx);
-
-      console.log('authy authy authy ', token)
 
       const componentProps =
         WrappedComponent.getInitialProps &&
@@ -65,8 +64,20 @@ function withAuthSync(WrappedComponent) {
   };
 }
 
-function auth(ctx) {
+async function auth(ctx) {
   const { token } = nextCookie(ctx);
+
+  // verify cookie first
+  let isVerified = await verifyCookie(token)
+
+  if(!isVerified){
+    cookie.remove('token')
+    ctx.res.writeHead(302, { Location: "/login" });
+    ctx.res.end();
+
+    // return undefined
+
+  }
 
   /*
    * If `ctx.req` is available it means we are on the server.
@@ -98,15 +109,15 @@ async function logInCheck(ctx) {
   // basically, initial token has a very short lifespan
   // should aim to use a longer-lived one
   // aim for one day access
-  const apiUrl = "http://localhost:8000/api/token/verify/";
+  const apiUrl = `${API_URL}/api/token/verify/`;
 
-  const redirectOnError = () =>
-    {typeof window !== "undefined"
+  const redirectOnError = () => {
+    typeof window !== "undefined"
       ? Router.push("/login")
       : ctx.res.writeHead(302, { Location: "/login" }).end();
-    cookie.remove('token')
-    cookie.remove('name')
-    }
+    cookie.remove("token");
+    cookie.remove("name");
+  };
 
   try {
     const response = await fetch(apiUrl, {
@@ -116,7 +127,7 @@ async function logInCheck(ctx) {
       body: JSON.stringify({ token })
     });
 
-    console.log('this was the response ', response)
+    console.log("this was the response ", response);
 
     if (response.ok) {
       const js = await response.json();
@@ -129,6 +140,22 @@ async function logInCheck(ctx) {
   } catch (error) {
     // Implementation or Network error
     return redirectOnError();
+  }
+}
+
+async function verifyCookie(token) {
+  try {
+    const apiUrl = `${API_URL}/api/token/verify/`
+    const response = await fetch(apiUrl, {
+      method: "POST",
+
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    });
+
+    return response.ok
+  } catch {
+    return false
   }
 }
 

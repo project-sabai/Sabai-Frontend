@@ -48,6 +48,12 @@ class Prescription extends React.Component {
       `${API_URL}/visit/get?patient=${patientId}`
     );
 
+    let visitId = visit[visit.length - 1].pk;
+
+    let { data: consultations } = await axios.get(
+      `${API_URL}/consults/get?visit=${visitId}`
+    );
+
     let { data: medications } = await axios.get(`${API_URL}/medication/get`);
 
     let medicationsDict = {};
@@ -61,7 +67,8 @@ class Prescription extends React.Component {
     this.setState({
       patient: patient[0],
       visit: visit[visit.length - 1],
-      medicationsDict
+      medicationsDict,
+      consultations
     });
 
     this.loadMedicationStock();
@@ -97,25 +104,37 @@ class Prescription extends React.Component {
     this.setState({ orders, medications, reservedMedications, mounted: true });
   }
 
-  async massUpdate(flag){
-    let { orders, visit } = this.state
-    let promises = []
+  async massUpdate(flag) {
+    let { orders, visit } = this.state;
+    let promises = [];
 
     orders.forEach(order => {
-        let orderId = order.pk
-        let payload = {
-            order_status: flag
-        }
+      let orderId = order.pk;
+      let payload = {
+        order_status: flag
+      };
 
-        promises.push(axios.patch(`${API_URL}/order/update?pk=${orderId}`, payload))
-    })
+      let medicineId = order.fields.medicine
+      let medPayload = {
+        quantityChange: order.fields.quantity
+      }
+
+      promises.push(
+        axios.patch(`${API_URL}/medication/quantity?pk=${medicineId}`, medPayload)
+      )
+      promises.push(
+        axios.patch(`${API_URL}/order/update?pk=${orderId}`, payload)
+      );
+    });
 
     let visitPayload = {
-        status: 'finished'
-    }
-    promises.push(axios.patch(`${API_URL}/visit/update?pk=${visit.pk}`, visitPayload))
+      status: "finished"
+    };
+    promises.push(
+      axios.patch(`${API_URL}/visit/update?pk=${visit.pk}`, visitPayload)
+    );
 
-    await Promise.all(promises)
+    await Promise.all(promises);
     alert("Order Completed!");
   }
 
@@ -313,10 +332,51 @@ class Prescription extends React.Component {
     );
   }
 
+  renderConsultationsTable() {
+    let { consultations } = this.state;
+
+    let consultRows = consultations.map(consult => {
+      let type = consult.fields.type;
+      let subType =
+        consult.fields.sub_type == null ? "General" : consult.fields.sub_type;
+      let doctor = consult.fields.doctor;
+      let referredFor =
+        consult.fields.referred_for == null
+          ? "None"
+          : consult.fields.referred_for;
+
+      return (
+        <tr>
+          <td>{type}</td>
+          <td>{subType}</td>
+          <td>{doctor}</td>
+          <td>{referredFor}</td>
+        </tr>
+      );
+    });
+
+    return (
+      <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Sub Type</th>
+            <th>Doctor</th>
+            <th>Referred For</th>
+          </tr>
+        </thead>
+        <tbody>{consultRows}</tbody>
+      </table>
+    );
+  }
+
   render() {
     console.log("what now is happening ", this.state.mounted);
 
     if (!this.state.mounted) return null;
+
+    console.log('uno ', this.state.consultations)
+    console.log('dos ', this.state.orders)
 
     return (
       <div
@@ -333,24 +393,36 @@ class Prescription extends React.Component {
             Approve/ Reject Orders
           </h1>
           {this.renderHeader()}
+          <b>
+            Do check if the patient has undergone at least one consultation!
+          </b>
           <hr />
 
-          <div class="columns is-12">
-            {this.renderTable()}
+          <div class="column is-12">
+            <label class="label">Consultations</label>
+            {this.state.consultations.length > 0 ? this.renderConsultationsTable() : <h2>None</h2>}
+
+            <hr />
+
+            <label class="label">Prescriptions</label>
+            {this.state.orders.length > 0 ? this.renderTable() : <h2>None</h2>}
             {/* {this.renderFirstColumn()}
             {this.renderSecondColumn()} */}
           </div>
+
+          <hr />
+
           <div class="levels">
             <div class="level-left">
               <button
                 class="button is-dark level-item"
-                onClick={() => this.massUpdate('APPROVED')}
+                onClick={() => this.massUpdate("APPROVED")}
               >
                 Approve All
               </button>
               <button
                 class="button is-dark level-item"
-                onClick={() => this.massUpdate('REJECTED')}
+                onClick={() => this.massUpdate("REJECTED")}
               >
                 Reject All
               </button>

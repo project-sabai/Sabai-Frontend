@@ -14,7 +14,7 @@ const SideMenu = props => (
         <h1 class="level-item sideMenuTitle">Biometrics</h1>
       </div>
     </div>
-    <p class="menu-label sideMenuItem">{cookie.get('name')}</p>
+    <p class="menu-label sideMenuItem">{cookie.get("name")}</p>
     <p class="menu-label sideMenuItem">Services</p>
     <ul class="menu-list">
       <li>
@@ -25,6 +25,11 @@ const SideMenu = props => (
       <li>
         <Link href="/queue" replace>
           <a>Queue</a>
+        </Link>
+      </li>
+      <li>
+        <Link href="/records" replace>
+          <a>Records</a>
         </Link>
       </li>
     </ul>
@@ -43,6 +48,11 @@ const SideMenu = props => (
     </ul>
     <p class="menu-label sideMenuItem">Others</p>
     <ul class="menu-list">
+      <li>
+        <Link href="/users" replace>
+          <a>Users</a>
+        </Link>
+      </li>
       <li onClick={logout}>
         <a>Logout</a>
       </li>

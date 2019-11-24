@@ -3,7 +3,7 @@ import { withAuthSync, logInCheck } from "../utils/auth";
 import axios from "axios";
 import moment from "moment";
 import Router from "next/router";
-import {API_URL} from '../utils/constants'
+import { API_URL } from "../utils/constants";
 
 class Queue extends React.Component {
   static async getInitialProps(ctx) {
@@ -20,14 +20,14 @@ class Queue extends React.Component {
       visits: [],
       visitsFiltered: [],
       filterString: "",
-      formChoices:{
-        triageChoice: 'medicalTriage',
-        consultChoice: 'medical'
+      formChoices: {
+        triageChoice: "medicalTriage",
+        consultChoice: "medical"
       }
     };
 
     this.onFilterChange = this.onFilterChange.bind(this);
-    this.handleFormChoiceChange = this.handleFormChoiceChange.bind(this)
+    this.handleFormChoiceChange = this.handleFormChoiceChange.bind(this);
   }
 
   componentDidMount() {
@@ -53,9 +53,7 @@ class Queue extends React.Component {
       activePatients.add(patient);
     });
 
-    let { data: patients } = await axios.get(
-      `${API_URL}/patients/get`
-    );
+    let { data: patients } = await axios.get(`${API_URL}/patients/get`);
     let patientsFiltered = patients.filter(patient => {
       let patientId = patient.pk;
       return activePatients.has(patientId);
@@ -85,17 +83,17 @@ class Queue extends React.Component {
   }
 
   handleFormChoiceChange() {
-    let { formChoices } = this.state
+    let { formChoices } = this.state;
 
-    const target = event.target
-    const value = target.value
-    const name = target.name
+    const target = event.target;
+    const value = target.value;
+    const name = target.name;
 
-    formChoices[name] = value
+    formChoices[name] = value;
 
     this.setState({
       formChoices
-    })
+    });
   }
 
   renderTableContent() {
@@ -107,14 +105,12 @@ class Queue extends React.Component {
 
       let progress = (
         <button
-        class="button is-dark level-item"
-        onClick={() =>
-          {console.log('lol')}
-        }
-      >
-        View
-      </button>
-      )
+          class="button is-dark level-item"
+          onClick={() => Router.push(`/record?id=${visit.patient.pk}`)}
+        >
+          View
+        </button>
+      );
 
       let triage = (
         <div class="field is-grouped">
@@ -124,8 +120,8 @@ class Queue extends React.Component {
                 name={"triageChoice"}
                 onChange={this.handleFormChoiceChange}
               >
-                <option value={'medicalTriage'}>Medical</option>
-                <option value={'dentalTriage'}>Dental</option>
+                <option value={"medicalTriage"}>Medical</option>
+                <option value={"dentalTriage"}>Dental</option>
               </select>
             </div>
           </div>
@@ -133,7 +129,9 @@ class Queue extends React.Component {
           <button
             class="button is-dark level-item"
             onClick={() =>
-              Router.push(`/patient?id=${visit.patient.pk}&form=${formChoices.triageChoice}`)
+              Router.push(
+                `/patient?id=${visit.patient.pk}&form=${formChoices.triageChoice}`
+              )
             }
           >
             Create
@@ -149,8 +147,8 @@ class Queue extends React.Component {
                 name={"consultChoice"}
                 onChange={this.handleFormChoiceChange}
               >
-                <option value={'medical'}>Medical</option>
-                <option value={'dental'}>Dental</option>
+                <option value={"medical"}>Medical</option>
+                <option value={"dental"}>Dental</option>
               </select>
             </div>
           </div>
@@ -158,7 +156,9 @@ class Queue extends React.Component {
           <button
             class="button is-dark level-item"
             onClick={() =>
-              Router.push(`/patient?id=${visit.patient.pk}&form=${formChoices.consultChoice}`)
+              Router.push(
+                `/patient?id=${visit.patient.pk}&form=${formChoices.consultChoice}`
+              )
             }
           >
             Create
@@ -220,34 +220,37 @@ class Queue extends React.Component {
           // position: "relative"
         }}
       >
-        <div class="field">
-          <div class="control">
-            <input
-              class="input is-medium"
-              type="text"
-              placeholder="Search Patient"
-              onChange={this.onFilterChange}
-            />
+        <div class="column is-12">
+          <h1 style={{ color: "black", fontSize: "1.5em" }}>Queue</h1>
+          <div class="field">
+            <div class="control">
+              <input
+                class="input is-medium"
+                type="text"
+                placeholder="Search Patient"
+                onChange={this.onFilterChange}
+              />
+            </div>
           </div>
-        </div>
-        <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Photo</th>
-              <th>Full Name</th>
-              <th>Progress</th>
-              <th>New Triage</th>
-              <th>New Consultation</th>
-              {/* <th>Medical Triage</th>
+          <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Photo</th>
+                <th>Full Name</th>
+                <th>Record</th>
+                <th>New Triage</th>
+                <th>New Consultation</th>
+                {/* <th>Medical Triage</th>
               <th>Dental Triage</th>
               <th>Medical</th>
               <th>Dental</th> */}
-              {/* <th>ID</th> */}
-            </tr>
-          </thead>
-          <tbody>{this.renderTableContent()}</tbody>
-        </table>
+                {/* <th>ID</th> */}
+              </tr>
+            </thead>
+            <tbody>{this.renderTableContent()}</tbody>
+          </table>
+        </div>
       </div>
     );
   }

@@ -6,6 +6,7 @@ import axios from "axios";
 import styles from "../../styles/styles.scss";
 import _ from "lodash";
 import { MedicationForm } from "../../components/forms/stock";
+import { API_URL } from "../../utils/constants";
 
 Modal.setAppElement("#__next");
 
@@ -36,7 +37,7 @@ class Stock extends React.Component {
 
   async onRefresh() {
     let { data: medications } = await axios.get(
-      "http://localhost:8000/medication/get"
+      `${API_URL}/medication/get`
     );
 
     console.log("look what we have here ", medications);
@@ -63,7 +64,7 @@ class Stock extends React.Component {
 
       console.log("editing entry", medicationDetails);
       await axios.patch(
-        `http://localhost:8000/medication/update?pk=${key}`,
+        `${API_URL}/medication/update?pk=${key}`,
         medicationDetails
       );
       alert("Medication updated!");
@@ -71,7 +72,7 @@ class Stock extends React.Component {
       medicationDetails.quantity = changeQuantity;
       console.log("new entry", medicationDetails);
       await axios.post(
-        "http://localhost:8000/medication/new",
+        `${API_URL}/medication/new`,
         medicationDetails
       );
       alert("New Medication created!");

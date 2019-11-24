@@ -352,7 +352,7 @@ class DentalForm extends React.Component {
         <hr />
 
         <div class="field">
-          <label class="label">Referred for</label>
+          <label class="label">Referred for (within clinic)</label>
           <div class="control" style={{ marginBottom: 20 }}>
             <input
               name="referred_for"
@@ -435,7 +435,7 @@ class MedicalForm extends React.Component {
         <hr />
 
         <div class="field">
-          <label class="label">Referred for</label>
+          <label class="label">Referred for (within clinic)</label>
           <div class="control" style={{ marginBottom: 20 }}>
             <input
               name="referred_for"
@@ -531,7 +531,7 @@ class PrescriptionForm extends React.Component {
         </div>
 
         <div class="field">
-          <label class="label">Notes</label>
+          <label class="label">Dosage Instructions</label>
           <div class="control">
             <textarea
               name="notes"

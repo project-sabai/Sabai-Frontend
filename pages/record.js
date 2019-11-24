@@ -7,24 +7,18 @@ import Modal from "react-modal";
 import moment from "moment";
 import cookie from "js-cookie";
 import {
-  DentalTriageForm,
-  MedicalTriageForm,
-  DentalForm,
-  MedicalForm,
-  PrescriptionForm
-} from "../components/forms/patient";
-import {
   ConsultationsTable,
   ConsultationsView,
   DentalTriageView,
   MedicalTriageView,
-  VisitPrescriptionsTable
+  VisitPrescriptionsTable,
+  PatientView
 } from "../components/views/patient";
 import { API_URL } from "../utils/constants";
 
 Modal.setAppElement("#__next");
 
-class Patient extends React.Component {
+class Record extends React.Component {
   static async getInitialProps(ctx) {
     let authentication = await logInCheck(ctx);
     let { query } = ctx;
@@ -54,8 +48,6 @@ class Patient extends React.Component {
       modalContent: {}
     };
 
-    this.handleInputChange = this.handleInputChange.bind(this);
-    this.handlePrescriptionChange = this.handlePrescriptionChange.bind(this);
     this.handleVisitChange = this.handleVisitChange.bind(this);
   }
 
@@ -135,22 +127,10 @@ class Patient extends React.Component {
     );
   }
 
-  toggleFormModal(order = {}) {
-    this.loadMedicationStock();
-
-    this.setState({
-      formModalIsOpen: !this.state.formModalIsOpen,
-      medicationDetails: order,
-      isEditing: Object.keys(order).length > 0
-    });
-  }
-
   async loadMedicationStock() {
     let { data: medications } = await axios.get(`${API_URL}/medication/get`);
 
-    let { data: orders } = await axios.get(
-      `${API_URL}/order/get?order_status=PENDING`
-    );
+    let { data: orders } = await axios.get(`${API_URL}/order/get?order_status=PENDING`);
 
     // key -> medicine pk
     // value -> total reserved
@@ -168,98 +148,6 @@ class Patient extends React.Component {
     });
 
     this.setState({ medications, reservedMedications });
-  }
-
-  renderFormModal() {
-    let {
-      patient,
-      isEditing,
-      medications,
-      medicationDetails,
-      formModalIsOpen,
-      reservedMedications
-    } = this.state;
-
-    let options = medications.map(medication => {
-      let name = medication.fields.medicine_name;
-      let pKey = medication.pk;
-
-      var value = "";
-      if (Object.keys(medicationDetails).length > 0)
-        value = `${medicationDetails.medicine} ${medicationDetails.medicine_name}`;
-
-      if (value == `${pKey} ${name}`)
-        return (
-          <option value={`${pKey} ${name}`} selected>
-            {name}
-          </option>
-        );
-      return <option value={`${pKey} ${name}`}>{name}</option>;
-    });
-
-    return (
-      <Modal
-        isOpen={formModalIsOpen}
-        onRequestClose={() => this.toggleFormModal()}
-        style={formModalStyles}
-        contentLabel="Example Modal"
-      >
-        <PrescriptionForm
-          allergies={patient.fields.drug_allergy}
-          handleInputChange={this.handlePrescriptionChange}
-          formDetails={medicationDetails}
-          isEditing={isEditing}
-          medicationOptions={options}
-          medications={medications}
-          reservedMedications={reservedMedications}
-          onSubmit={() => this.submitNewPrescription()}
-        />
-      </Modal>
-    );
-  }
-
-  handlePrescriptionChange(event) {
-    let { medicationDetails } = this.state;
-
-    const target = event.target;
-    const value = target.value;
-    const name = target.name;
-
-    if (name === "medication") {
-      let pKey = value.split(" ")[0];
-      let medicineName = value
-        .split(" ")
-        .slice(1)
-        .join(" ");
-
-      medicationDetails["medicine"] = pKey;
-      medicationDetails["medicine_name"] = medicineName;
-    } else {
-      medicationDetails[name] = value;
-    }
-
-    this.setState({
-      medicationDetails
-    });
-  }
-
-  submitNewPrescription() {
-    let { orders, medicationDetails, isEditing } = this.state;
-
-    if (isEditing) {
-      // go find that order
-      let index = orders.findIndex(order => {
-        order.medication == medicationDetails.medication;
-      });
-      orders[index] = medicationDetails;
-      // edit that order
-    } else orders.push({ ...medicationDetails, order_status: "PENDING" });
-
-    this.setState({
-      orders: orders,
-      medicationDetails: {},
-      formModalIsOpen: false
-    });
   }
 
   async loadVisitDetails(visitID) {
@@ -306,104 +194,7 @@ class Patient extends React.Component {
     });
   }
 
-  async submitForm() {
-    let { form } = this.props.query;
-    let { formDetails, visitID, orders } = this.state;
 
-    var formPayload = {
-      visit: visitID,
-      ...formDetails
-    };
-
-    var consultId;
-    var orderPromises;
-
-    console.log("form is ", formPayload);
-
-    switch (form) {
-      case "medicalTriage":
-        await axios.post(`${API_URL}/medicalvitals/new`, formPayload);
-        alert("Medical Triage Completed!");
-        break;
-      case "dentalTriage":
-        await axios.post(`${API_URL}/dentalvitals/new`, formPayload);
-        alert("Dental Triage Completed!");
-        break;
-      case "medical":
-        let { data: medicalConsult } = await axios.post(
-          `${API_URL}/consults/new`,
-          {
-            ...formPayload,
-            doctor: cookie.get("name"),
-            type: "medical"
-          }
-        );
-
-        console.log("medicalConsult ", medicalConsult[0]);
-
-        consultId = medicalConsult[0].pk;
-        orderPromises = [];
-
-        orders.forEach(order => {
-          let orderPayload = {
-            ...order,
-            visit: visitID,
-            consult: consultId,
-            doctor: cookie.get("name")
-          };
-          orderPromises.push(axios.post(`${API_URL}/order/new`, orderPayload));
-        });
-
-        await Promise.all(orderPromises);
-        alert("Medical Consult Completed!");
-        break;
-      case "dental":
-        console.log("this is the formPayload ", formPayload);
-        let { data: dentalConsult } = await axios.post(
-          `${API_URL}/consults/new`,
-          {
-            ...formPayload,
-            doctor: cookie.get("name"),
-            type: "dental"
-          }
-        );
-        consultId = dentalConsult[0].pk;
-
-        orderPromises = [];
-
-        orders.forEach(order => {
-          let orderPayload = {
-            ...order,
-            consult: consultId,
-            visit: visitID,
-            doctor: cookie.get("name")
-          };
-          orderPromises.push(axios.post(`${API_URL}/order/new`, orderPayload));
-        });
-
-        alert("Dental Consult Completed!");
-        break;
-    }
-
-    console.log("loser lah");
-    Router.push("/queue");
-  }
-
-  handleInputChange(event) {
-    let { formDetails } = this.state;
-
-    const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value;
-    const name = target.name;
-
-    formDetails[name] = value;
-
-    console.log("changes made ", formDetails);
-
-    this.setState({
-      formDetails
-    });
-  }
 
   handleVisitChange(event) {
     const value = event.target.value;
@@ -457,19 +248,23 @@ class Patient extends React.Component {
               <div class="message-body">{patient.fields.name}</div>
             </article>
           </div>
-          <div class="column is-3">
-            <label class="label">Visited Before?</label>
-            <article class="message">
-              <div class="message-body">{visits.length > 1 ? 'Yes' : 'No'}</div>
-            </article>
-          </div>
           <div class="column is-3"></div>
         </div>
       </div>
     );
   }
 
-  renderFirstColumn() {
+  renderFirstColumn(){
+    let {patient} = this.state  
+    
+    return(
+        <PatientView
+            content={patient}
+        />
+      )
+  }
+
+  renderSecondColumn() {
     let {
       dentalTriage,
       medicalTriage,
@@ -510,7 +305,7 @@ class Patient extends React.Component {
     });
 
     return (
-      <div class="column is-7">
+      <div class="column is-9">
         <div class="columns">
           <div class="column is-6">
             <label class="label">Medical Triage</label>
@@ -565,93 +360,12 @@ class Patient extends React.Component {
     );
   }
 
-  renderSecondColumn() {
-    let { form } = this.props.query;
-    let { formDetails, orders } = this.state;
-
-    let formContent = () => {
-      switch (form) {
-        case "medicalTriage":
-          return (
-            <MedicalTriageForm
-              formDetails={formDetails}
-              handleInputChange={this.handleInputChange}
-            />
-          );
-        case "dentalTriage":
-          return (
-            <DentalTriageForm
-              formDetails={formDetails}
-              handleInputChange={this.handleInputChange}
-            />
-          );
-
-        case "medical":
-          return (
-            <div>
-              <MedicalForm
-                formDetails={formDetails}
-                handleInputChange={this.handleInputChange}
-              />
-              <hr />
-              <label class="label">Prescriptions</label>
-              {orders.length > 0 ? this.renderPrescriptionTable() : "None"}
-              <button
-                class="button is-dark level-item"
-                style={{ marginTop: 15 }}
-                onClick={() => this.toggleFormModal()}
-              >
-                Add
-              </button>
-            </div>
-          );
-        case "dental":
-          return (
-            <div>
-              <DentalForm
-                formDetails={formDetails}
-                handleInputChange={this.handleInputChange}
-              />
-              <hr />
-              <label class="label">Prescriptions</label>
-              {orders.length > 0 ? this.renderPrescriptionTable() : "None"}
-              <button
-                class="button is-dark level-item"
-                style={{ marginTop: 15 }}
-                onClick={() => this.toggleFormModal()}
-              >
-                Add
-              </button>
-            </div>
-          );
-      }
-    };
-
-    return (
-      <div class="column is-5">
-        {formContent()}
-
-        <hr />
-
-        <button
-          class="button is-dark is-medium level-item"
-          style={{ marginTop: 15 }}
-          onClick={() => this.submitForm()}
-        >
-          Submit
-        </button>
-      </div>
-    );
-  }
-
   renderPrescriptionTable() {
     let { orders } = this.state;
 
     let orderRows = orders.map((order, index) => {
       let name = order.medicine_name;
       let quantity = order.quantity;
-
-      console.log("name ", name);
 
       return (
         <tr>
@@ -707,13 +421,9 @@ class Patient extends React.Component {
           marginRight: 25
         }}
       >
-        {this.renderFormModal()}
         {this.renderViewModal()}
         <h1 style={{ color: "black", fontSize: "1.5em" }}>Patient</h1>
         {this.renderHeader()}
-        <b>
-          Please remember to press the submit button at the end of the form!
-        </b>
 
         <hr />
 
@@ -728,15 +438,6 @@ class Patient extends React.Component {
   }
 }
 
-const formModalStyles = {
-  content: {
-    left: "35%",
-    right: "17.5%",
-    top: "12.5%",
-    bottom: "12.5%"
-  }
-};
-
 const viewModalStyles = {
   content: {
     left: "30%",
@@ -746,4 +447,4 @@ const viewModalStyles = {
   }
 };
 
-export default withAuthSync(Patient);
+export default withAuthSync(Record);

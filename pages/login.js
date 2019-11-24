@@ -5,6 +5,7 @@ import Layout from "../components/layout";
 import { login } from "../utils/auth";
 import styles from "../styles/styles.scss";
 import axios from "axios";
+import { API_URL } from "../utils/constants";
 
 function Login() {
   const [userData, setUserData] = useState({ username: "", error: "" });
@@ -15,8 +16,8 @@ function Login() {
 
     const username = userData.username;
     const password = userData.password
-    const url = 'http://localhost:8000/api/token/'
-    const userInfoUrl = `http://localhost:8000/user/get?username=${username}`
+    const url = `${API_URL}/api/token/`
+    const userInfoUrl = `${API_URL}/user/get?username=${username}`
 
     try {
       console.log('fetching data')
