@@ -8,6 +8,7 @@ import Modal from "react-modal";
 import Webcam from "react-webcam";
 import moment from "moment";
 import { API_URL } from "../utils/constants";
+import FileBase64 from "react-file-base64";
 
 // put id
 
@@ -39,7 +40,7 @@ class Patients extends React.Component {
       scanModalIsOpen: false,
       modalIsOpen: false,
       cameraIsOpen: false,
-      imageDetails: null,
+      imageDetails: "",
       formDetails: {
         gender: "Male"
       },
@@ -63,6 +64,10 @@ class Patients extends React.Component {
 
   componentDidMount() {
     this.onRefresh();
+  }
+
+  getFiles(file) {
+    this.setState({ imageDetails: file.base64 });
   }
 
   async onRefresh() {
@@ -212,7 +217,7 @@ class Patients extends React.Component {
         payload
       );
 
-      if(typeof response.error == 'undefined'){
+      if (typeof response.error == "undefined") {
         this.setState({
           patient: response[0],
           formDetails: {
@@ -222,9 +227,9 @@ class Patients extends React.Component {
         });
         alert("New patient registered!");
         this.closeModal();
-      }else{alert("Please retake photo!")}
-
-
+      } else {
+        alert("Please retake photo!");
+      }
     }
   }
 
@@ -758,11 +763,7 @@ class Patients extends React.Component {
   render() {
     const { value, suggestions, patient } = this.state;
 
-    console.log("formdetails ", Object.keys(this.state.formDetails));
-
-    console.log("this is our patient ", patient);
-
-    console.log("this is the props query ", this.props.query);
+    console.log("image details ", this.state.file);
 
     // Autosuggest will pass through all these props to the input.
     const inputProps = {
@@ -786,6 +787,7 @@ class Patients extends React.Component {
       >
         {this.renderModal()}
         {this.renderScanModal()}
+        <FileBase64 multiple={false} onDone={this.getFiles.bind(this)} />
         <div class="column is-12">
           <h1 style={{ color: "black", fontSize: "1.5em" }}>Registration</h1>
         </div>
