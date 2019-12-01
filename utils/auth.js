@@ -153,6 +153,8 @@ async function verifyCookie(token) {
       body: JSON.stringify({ token })
     });
 
+    console.log('this is the response ', response.ok)
+
     return response.ok
   } catch {
     return false

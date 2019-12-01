@@ -456,11 +456,17 @@ class Patient extends React.Component {
             <article class="message">
               <div class="message-body">{patient.fields.name}</div>
             </article>
+            <label class="label">Allergies</label>
+            <article class="message">
+              <div class="message-body">
+                <h2 style={{ color: "red" }}>{patient.fields.drug_allergy}</h2>
+              </div>
+            </article>
           </div>
           <div class="column is-3">
             <label class="label">Visited Before?</label>
             <article class="message">
-              <div class="message-body">{visits.length > 1 ? 'Yes' : 'No'}</div>
+              <div class="message-body">{visits.length > 1 ? "Yes" : "No"}</div>
             </article>
           </div>
           <div class="column is-3"></div>
