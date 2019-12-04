@@ -73,7 +73,7 @@ class ConsultationsView extends React.Component {
         </div>
 
         <div class="field">
-          <label class="label">Problems</label>
+          <label class="label">{'History & Examination'}</label>
           <article class="message">
             <div class="message-body">{fields.problems}</div>
           </article>

@@ -394,7 +394,7 @@ class MedicalForm extends React.Component {
         </div>
 
         <div class="field">
-          <label class="label">Problems</label>
+          <label class="label">{'History & Examination'}</label>
           <div class="control">
             <textarea
               name="problems"

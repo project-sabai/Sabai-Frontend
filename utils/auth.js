@@ -4,6 +4,7 @@ import nextCookie from "next-cookies";
 import cookie from "js-cookie";
 import getHost from "../utils/get-host";
 import { API_URL } from "../utils/constants";
+import fetch from "isomorphic-unfetch";
 
 function login({ token, name }) {
   cookie.set("token", token, { expires: 1 });
@@ -67,18 +68,6 @@ function withAuthSync(WrappedComponent) {
 async function auth(ctx) {
   const { token } = nextCookie(ctx);
 
-  // verify cookie first
-  let isVerified = await verifyCookie(token)
-
-  if(!isVerified){
-    cookie.remove('token')
-    ctx.res.writeHead(302, { Location: "/login" });
-    ctx.res.end();
-
-    // return undefined
-
-  }
-
   /*
    * If `ctx.req` is available it means we are on the server.
    * Additionally if there's no token it means the user is not logged in.
@@ -135,9 +124,11 @@ async function logInCheck(ctx) {
       return js;
     } else {
       // https://github.com/developit/unfetch#caveats
-      return await redirectOnError();
+      console.log('else in action')
+      return redirectOnError();
     }
   } catch (error) {
+    console.log('error ', error)
     // Implementation or Network error
     return redirectOnError();
   }
