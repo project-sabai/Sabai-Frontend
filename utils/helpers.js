@@ -11,15 +11,20 @@ export async function logInCheck(ctx) {
       : ctx.res.writeHead(302, { Location: "/login" }).end();
 
   try {
-    const response = await fetch(apiUrl, {
-      credentials: "include",
-      headers: {
-        Authorization: JSON.stringify({ token })
-      }
-    })
+    // const response = await fetch(apiUrl, {
+    //   credentials: "include",
+    //   headers: {
+    //     Authorization: JSON.stringify({ token })
+    //   }
+    // })
 
-    if (response.ok) {
-      const js = await response.json();
+    const response = await axios.post(apiUrl, JSON.stringify({ token }), {
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (response.statusText == "OK") {
+      // const js = await response.json();
+      const js = {}
       console.log("js", js);
       return js;
     } else {

@@ -5,6 +5,7 @@ import cookie from "js-cookie";
 import getHost from "../utils/get-host";
 import { API_URL } from "../utils/constants";
 import fetch from "isomorphic-unfetch";
+import axios from "axios";
 
 function login({ token, name }) {
   cookie.set("token", token, { expires: 1 });
@@ -109,26 +110,34 @@ async function logInCheck(ctx) {
   };
 
   try {
-    const response = await fetch(apiUrl, {
-      method: "POST",
+    // const response = await fetch(apiUrl, {
+    //   method: "POST",
 
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token })
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ token })
+    // });
+
+    console.log('what what que')
+    console.log('??', JSON.stringify({token}))
+
+    const response = await axios.post(apiUrl, JSON.stringify({ token }), {
+      headers: { "Content-Type": "application/json" }
     });
 
     console.log("this was the response ", response);
 
-    if (response.ok) {
-      const js = await response.json();
+    if (response.statusText == "OK") {
+      // const js = await response.json();
+      const js = {}
       console.log("js", js);
       return js;
     } else {
       // https://github.com/developit/unfetch#caveats
-      console.log('else in action')
+      console.log("else in action");
       return redirectOnError();
     }
   } catch (error) {
-    console.log('error ', error)
+    console.log("error ", error);
     // Implementation or Network error
     return redirectOnError();
   }
@@ -136,7 +145,7 @@ async function logInCheck(ctx) {
 
 async function verifyCookie(token) {
   try {
-    const apiUrl = `${API_URL}/api/token/verify/`
+    const apiUrl = `${API_URL}/api/token/verify/`;
     const response = await fetch(apiUrl, {
       method: "POST",
 
@@ -144,11 +153,11 @@ async function verifyCookie(token) {
       body: JSON.stringify({ token })
     });
 
-    console.log('this is the response ', response.ok)
+    console.log("this is the response ", response.ok);
 
-    return response.ok
+    return response.ok;
   } catch {
-    return false
+    return false;
   }
 }
 

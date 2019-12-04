@@ -6,6 +6,7 @@ const fs = require('fs');
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const httpsOptions = {
   key: fs.readFileSync('./certificates/localhost.key'),
