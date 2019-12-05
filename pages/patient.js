@@ -114,6 +114,9 @@ class Patient extends React.Component {
       viewType
     } = this.state;
 
+    console.log('consult apa ', consult)
+    console.log('wtfwtfwtfwtf')
+
     let modalContent =
       viewType == "medicalTriage" ? (
         <MedicalTriageView content={medicalTriage} />

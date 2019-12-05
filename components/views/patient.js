@@ -63,6 +63,8 @@ class ConsultationsView extends React.Component {
     let fields = content.fields;
     let prescriptions = content.prescriptions;
 
+    console.log('we almost done ', fields)
+
     return (
       <div>
         <div class="field">
@@ -115,7 +117,7 @@ class ConsultationsView extends React.Component {
 
         <hr />
 
-        {type == "medical" ? this.renderMedicalConsultation(content) : null}
+        {type.toLowerCase() == "medical" ? this.renderMedicalConsultation(content) : null}
 
         <hr />
 
