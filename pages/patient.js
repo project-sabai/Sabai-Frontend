@@ -81,10 +81,6 @@ class Patient extends React.Component {
       return b.pk - a.pk;
     });
 
-    console.log("this is the patient ", patient[0]);
-    console.log("this are the visits ", visitsSorted);
-    console.log("first of their name ", visitsSorted[0]);
-
     this.setState({
       patient: patient[0],
       visits: visitsSorted
@@ -96,7 +92,6 @@ class Patient extends React.Component {
   }
 
   toggleViewModal(viewType = null, consult = {}) {
-    console.log("this is happening ", consult);
 
     this.setState({
       viewModalOpen: !this.state.viewModalOpen,
@@ -113,9 +108,6 @@ class Patient extends React.Component {
       consult,
       viewType
     } = this.state;
-
-    console.log('consult apa ', consult)
-    console.log('wtfwtfwtfwtf')
 
     let modalContent =
       viewType == "medicalTriage" ? (
@@ -297,7 +289,6 @@ class Patient extends React.Component {
       `${API_URL}/dentalvitals/get?visit=${visitID}`
     );
 
-    console.log("??<", consults[0]);
 
     this.setState({
       consults: consultsEnriched,
@@ -321,8 +312,6 @@ class Patient extends React.Component {
     var consultId;
     var orderPromises;
 
-    console.log("form is ", formPayload);
-
     switch (form) {
       case "medicalTriage":
         await axios.post(`${API_URL}/medicalvitals/new`, formPayload);
@@ -342,8 +331,6 @@ class Patient extends React.Component {
           }
         );
 
-        console.log("medicalConsult ", medicalConsult[0]);
-
         consultId = medicalConsult[0].pk;
         orderPromises = [];
 
@@ -361,7 +348,6 @@ class Patient extends React.Component {
         alert("Medical Consult Completed!");
         break;
       case "dental":
-        console.log("this is the formPayload ", formPayload);
         let { data: dentalConsult } = await axios.post(
           `${API_URL}/consults/new`,
           {
@@ -388,7 +374,6 @@ class Patient extends React.Component {
         break;
     }
 
-    console.log("loser lah");
     Router.push("/queue");
   }
 
@@ -400,8 +385,6 @@ class Patient extends React.Component {
     const name = target.name;
 
     formDetails[name] = value;
-
-    console.log("changes made ", formDetails);
 
     this.setState({
       formDetails
@@ -659,8 +642,6 @@ class Patient extends React.Component {
     let orderRows = orders.map((order, index) => {
       let name = order.medicine_name;
       let quantity = order.quantity;
-
-      console.log("name ", name);
 
       return (
         <tr>

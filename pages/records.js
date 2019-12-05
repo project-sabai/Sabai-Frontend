@@ -62,18 +62,7 @@ class Records extends React.Component {
       return (
         <tr>
           <td>{Id}</td>
-          <td>
-            <figure class="image is-96x96">
-              <img
-                // src="https://bulma.io/images/placeholders/96x96.png"
-                src={imageUrl}
-                alt="Placeholder image"
-                style={{ height: 96, width: 96, objectFit: "cover" }}
-              />
-            </figure>
-          </td>
           <td>{fullName}</td>
-
           <td>{progress}</td>
         </tr>
       );
@@ -85,7 +74,6 @@ class Records extends React.Component {
   onFilterChange(event) {
     // get
     let { patients } = this.state;
-    // console.log("event.value", event.target.value);
 
     let patientsFiltered = patients.filter(patient => {
       let patient_details = patient.fields;
@@ -128,7 +116,6 @@ class Records extends React.Component {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Photo</th>
                 <th>Full Name</th>
                 <th>Actions</th>
               </tr>

@@ -42,8 +42,6 @@ export default class Layout extends React.Component {
   }
 
   render() {
-    console.log('this one is ', this.props.children)
-    
     return (
       <React.Fragment>
         <Head>

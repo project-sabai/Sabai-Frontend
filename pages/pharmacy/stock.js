@@ -40,8 +40,6 @@ class Stock extends React.Component {
       `${API_URL}/medication/get`
     );
 
-    console.log("look what we have here ", medications);
-
     this.setState({ medications, medicationsFiltered: medications});
   }
 
@@ -62,7 +60,6 @@ class Stock extends React.Component {
       delete medicationDetails["changeQuantity"];
       delete medicationDetails["pk"];
 
-      console.log("editing entry", medicationDetails);
       await axios.patch(
         `${API_URL}/medication/update?pk=${key}`,
         medicationDetails
@@ -70,7 +67,6 @@ class Stock extends React.Component {
       alert("Medication updated!");
     } else {
       medicationDetails.quantity = changeQuantity;
-      console.log("new entry", medicationDetails);
       await axios.post(
         `${API_URL}/medication/new`,
         medicationDetails
@@ -117,8 +113,6 @@ class Stock extends React.Component {
       default:
         break;
     }
-
-    console.log("look here now ", changes);
 
     this.setState(changes);
   }

@@ -73,10 +73,6 @@ class Record extends React.Component {
       return b.pk - a.pk;
     });
 
-    console.log("this is the patient ", patient[0]);
-    console.log("this are the visits ", visitsSorted);
-    console.log("first of their name ", visitsSorted[0]);
-
     this.setState({
       patient: patient[0],
       visits: visitsSorted
@@ -88,7 +84,6 @@ class Record extends React.Component {
   }
 
   toggleViewModal(viewType = null, consult = {}) {
-    console.log("this is happening ", consult);
 
     this.setState({
       viewModalOpen: !this.state.viewModalOpen,
@@ -181,8 +176,6 @@ class Record extends React.Component {
     let { data: dentalTriage } = await axios.get(
       `${API_URL}/dentalvitals/get?visit=${visitID}`
     );
-
-    console.log("??<", consults[0]);
 
     this.setState({
       consults: consultsEnriched,

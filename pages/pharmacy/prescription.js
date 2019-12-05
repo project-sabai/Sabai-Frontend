@@ -100,7 +100,6 @@ class Prescription extends React.Component {
           reservedMedications[medicationID] + quantityReserved;
       }
     });
-    console.log("medications: ", medications);
     this.setState({ orders, medications, reservedMedications, mounted: true });
   }
 
@@ -199,8 +198,6 @@ class Prescription extends React.Component {
       reservedMedications,
       editModalOpen
     } = this.state;
-
-    console.log("meidince ", medications);
 
     let options = medications.map(medication => {
       let name = medication.fields.medicine_name;
@@ -371,12 +368,8 @@ class Prescription extends React.Component {
   }
 
   render() {
-    console.log("what now is happening ", this.state.mounted);
 
     if (!this.state.mounted) return null;
-
-    console.log('uno ', this.state.consultations)
-    console.log('dos ', this.state.orders)
 
     return (
       <div

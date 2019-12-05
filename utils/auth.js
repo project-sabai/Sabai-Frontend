@@ -110,21 +110,9 @@ async function logInCheck(ctx) {
   };
 
   try {
-    // const response = await fetch(apiUrl, {
-    //   method: "POST",
-
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ token })
-    // });
-
-    console.log('what what que')
-    console.log('??', JSON.stringify({token}))
-
     const response = await axios.post(apiUrl, JSON.stringify({ token }), {
       headers: { "Content-Type": "application/json" }
     });
-
-    console.log("this was the response ", response);
 
     if (response.statusText == "OK") {
       // const js = await response.json();
@@ -152,8 +140,6 @@ async function verifyCookie(token) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token })
     });
-
-    console.log("this is the response ", response.ok);
 
     return response.ok;
   } catch {

@@ -461,7 +461,6 @@ class PrescriptionForm extends React.Component {
     let { medications } = this.props;
 
     let medication = medications.filter(med => {
-      // console.log('... ', med.pk, medicine)
       return medicine == med.pk;
     });
 

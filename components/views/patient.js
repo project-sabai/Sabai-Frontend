@@ -63,8 +63,6 @@ class ConsultationsView extends React.Component {
     let fields = content.fields;
     let prescriptions = content.prescriptions;
 
-    console.log('we almost done ', fields)
-
     return (
       <div>
         <div class="field">
@@ -98,6 +96,56 @@ class ConsultationsView extends React.Component {
     );
   }
 
+  renderDentalConsultation(content) {
+    let fields = content.fields;
+
+    return (
+      <div>
+        <div class="field">
+          <label class="label">EXO</label>
+          <article class="message">
+            <div class="message-body">{fields.exo}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">CAP</label>
+          <article class="message">
+            <div class="message-body">{fields.cap}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">SDF</label>
+          <article class="message">
+            <div class="message-body">{fields.sdf}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">F</label>
+          <article class="message">
+            <div class="message-body">{fields.f}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">Others</label>
+          <article class="message">
+            <div class="message-body">{fields.others}</div>
+          </article>
+        </div>
+
+        <div class="field">
+          <label class="label">Notes</label>
+          <article class="message">
+            <div class="message-body">{fields.notes}</div>
+          </article>
+        </div>
+      </div>
+    );
+  }
+
   render() {
     let { content } = this.props;
     if (Object.keys(content).length == 0) return null;
@@ -117,7 +165,7 @@ class ConsultationsView extends React.Component {
 
         <hr />
 
-        {type.toLowerCase() == "medical" ? this.renderMedicalConsultation(content) : null}
+        {type.toLowerCase() == "medical" ? this.renderMedicalConsultation(content) : this.renderDentalConsultation(content)}
 
         <hr />
 
