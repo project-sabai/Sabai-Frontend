@@ -49,3 +49,5 @@ The repo includes a minimal passwordless backend built with the new [API Routes 
 Session is synchronized across tabs. If you logout your session gets removed on all the windows as well. We use the HOC `withAuthSync` for this.
 
 The helper function `auth` helps to retrieve the token across pages and redirects the user if not token was found.
+
+playground
